@@ -3,60 +3,26 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.io.InputStreamReader;     // used to get our raw HTML source        
 
+/*
+GET GOOGLE IMAGE SEARCH URLs
+ Jeff Thompson | 2013 | www.jeffreythompson.org
+ 
+ Retrieves full image URLs from a Google image search (which can then be downloaded via PImage's
+ 'loadImage' method.
+ 
+ The main download method used here is built on PhyloWidget, since Processing's usual 'loadStrings'
+ returns a HTTP 403 error:
+ http://code.google.com/p/phylowidget/source/browse/trunk/PhyloWidget/src/org/phylowidget/render/images/ImageSearcher.java
+ 
+ Other arguments (some working, some not) via:
+ https://developers.google.com/image-search/v1/jsondevguide#json_args
+ 
+ Also looks helpful:
+ https://developers.google.com/custom-search/docs/xml_results?hl=en
+ 
+ */
 
-int x = 0;
-String madlib = "Tomorrow I will";
-String time = "tomorrow";
-String location = "cafe blah";
-String activity = "date";
-String guest = "susan";
-String order = "kebab";
-
-//for JSON readIn test
-JSONObject json;
-
-void setup() {
- // fullScreen();
- size(1000, 600);
-  background(0);
-  noStroke();
-  fill(102);
-}
-
-void draw() {
-  rect(x, height*0.2, 1, height*0.6); 
-  x = x + 2;
-  text(madlib, 10, 30);
-}
-
-void readIn() {
- // The following short JSON file called "data.json" is parsed 
-// in the code below. It must be in the project's "data" folder.
-//
-// {
-//   "id": 0,
-//   "species": "Panthera leo",
-//   "name": "Lion"
-// }
-
-  json = loadJSONObject("data.json");
-
-  int id = json.getInt("id");
-  String species = json.getString("species");
-  String name = json.getString("name");
-
-  println(id + ", " + species + ", " + name);
-}
-
-void mousePressed() {
-  println("Mouse was pressed");
-  //searchforgoogleimages();
-  readIn();
-}
-
-//Most all of this method comes from Jeff Thompson github.com/jeffThompson
-void searchforgoogleimages() {
-String searchTerm = "istanbul";       // term to search for (use spaces to separate terms)
+String searchTerm = "french toast";   // term to search for (use spaces to separate terms)
 int offset = 20;                      // we can only 20 results at a time - use this to offset and get more!
 String fileSize = "10mp";             // specify file size in mexapixels (S/M/L not figured out yet)
 String source = null;                 // string to save raw HTML source code
@@ -85,24 +51,27 @@ try {
   in.close();                                                                                          // close input stream (also closes network connection)
   source = response.toString();
 }
-
 // any problems connecting? let us know
 catch (Exception e) {
   e.printStackTrace();
 }
 
+// print full source code (for debugging)
+// println(source);
+
 // extract image URLs only, starting with 'imgurl'
 if (source != null) {
   String[][] m = matchAll(source, "img height=\"\\d+\" src=\"([^\"]+)\"");
   
+  // older regex, no longer working but left for posterity
+  // built partially from: http://www.mkyong.com/regular-expressions/how-to-validate-image-file-extension-with-regular-expression
+  // String[][] m = matchAll(source, "imgurl=(.*?\\.(?i)(jpg|jpeg|png|gif|bmp|tif|tiff))");    // (?i) means case-insensitive
   for (int i=0; i<m.length; i++) {                                                          // iterate all results of the match
-    println(i + ":\t" + m[i][1]);        // print (or store them)**
-    //try to load each image into the current image pane
-    
-    PImage webImg;
-    String url = m[i][1];
-    webImg = loadImage(url, "png");
-    image(webImg, int(random(200)), int(random(200)));
+    println(i + ":\t" + m[i][1]);                                                         // print (or store them)**
   }
 }
-}
+
+// ** here we get the 2nd item from each match - this is our 'group' containing just the file URL and extension
+
+// all done!
+exit();

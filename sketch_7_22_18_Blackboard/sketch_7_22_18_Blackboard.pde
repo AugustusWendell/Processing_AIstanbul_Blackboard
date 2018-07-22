@@ -3,14 +3,21 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.io.InputStreamReader;     // used to get our raw HTML source        
 
+//[AI]stanbul Blackboard application
 
 int x = 0;
 String madlib = "Tomorrow I will";
-String time = "tomorrow";
+String day = "tomorrow";
 String location = "cafe blah";
 String activity = "date";
 String guest = "susan";
 String order = "kebab";
+
+States state = States.STATE_2;
+
+int time;
+//time between state changes, from itinerary to dataviz to image presentation
+int wait = 5000;
 
 //for JSON readIn test
 JSONObject json;
@@ -21,13 +28,95 @@ void setup() {
   background(0);
   noStroke();
   fill(102);
+  time = millis();//store the current time
+  
+//test States Enumerator
+switch (state) {
+case STATE_1 :
+  println("STATE 1");
+  break;
+case STATE_2:
+  println("STATE 2");
+  break;
+case STATE_3:
+  println("STATE 3");
+  break;
+}
+
+//test getState function
+println(getState());
 }
 
 void draw() {
-  rect(x, height*0.2, 1, height*0.6); 
-  x = x + 2;
+  
+  //test States Enumerator
+switch (state) {
+case STATE_1 :
+  println("draw State 1");
+  WriteItinerary();
+  break;
+case STATE_2:
+  println("draw State 2");
+  DatabaseViz();
+  break;
+case STATE_3:
+  println("draw State 3");
+  ShowImages();
+  break;
+}
+  
+  //check the difference between now and the previously stored time is greater than the wait interval
+  if(millis() - time >= wait){
+    println("tick");//if it is, do something
+    //println(getMode());
+    time = millis();//also update the stored time
+    //clear the screen
+    background(0);
+    
+    
+    //changes the state to toggle the behaviour of the blackboard
+    if(state == States.STATE_2){
+      state = States.STATE_3;
+    } else
+   if(state == States.STATE_3){
+      state = States.STATE_1;
+    } else
+    if(state == States.STATE_1){
+      state = States.STATE_2;
+    } 
+  }
+}
+
+public void setState() {
+    
+}
+
+public int getState() {
+    switch (state) {
+        case STATE_1: return 1;
+        case STATE_2: return 2;
+        case STATE_3: return 3;
+    }
+    return 0;
+}
+
+//when the state is set to writing the itinerary, the draw method will call this routine to run
+void WriteItinerary() {
+  textSize(100);
   text(madlib, 10, 30);
 }
+
+//when the state is set to the visualizing the database, the draw method will call this routine to run
+void DatabaseViz() {
+  rect(x, height*0.2, 1, height*0.6); 
+  x = x + 2;
+}
+
+//when the state is set to showing the images, the draw method will call this routine to run
+void ShowImages() {
+  searchforgoogleimages();
+}
+
 
 void readIn() {
  // The following short JSON file called "data.json" is parsed 
@@ -48,10 +137,11 @@ void readIn() {
   println(id + ", " + species + ", " + name);
 }
 
+//old debug statements here to use a mousepressed input to make something happen
 void mousePressed() {
   println("Mouse was pressed");
   //searchforgoogleimages();
-  readIn();
+  //readIn();
 }
 
 //Most all of this method comes from Jeff Thompson github.com/jeffThompson
@@ -102,7 +192,10 @@ if (source != null) {
     PImage webImg;
     String url = m[i][1];
     webImg = loadImage(url, "png");
-    image(webImg, int(random(200)), int(random(200)));
+    //image(webImg, int(random(200)), int(random(200)));
+    for (int y=0; y<6; y++) {   
+    image(webImg, (i * 100), (y * 100));
+    }
   }
 }
 }
