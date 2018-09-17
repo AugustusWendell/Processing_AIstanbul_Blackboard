@@ -1,0 +1,12 @@
+{
+  "FeatureType": "NULL",
+  "datetime": 2018,
+  "Type": "map",
+  "Category": "Biraz kendinizden bahseder misiniz? / Tell me a little bit about yourself.",
+  "question": "Where do you live?",
+  "Lon": "28.973282",
+  "id": 26,
+  "Lat": "41.015997",
+  "qindex": 3,
+  "FeatureName": "cafe bambi"
+}

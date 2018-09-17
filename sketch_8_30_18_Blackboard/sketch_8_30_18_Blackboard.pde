@@ -10,6 +10,9 @@ import java.io.InputStreamReader;     // used to get our raw HTML source
 
 import de.bezier.data.sql.*;
 
+UserSession[] datalog;
+
+
 //[AI]stanbul Blackboard application
 
 int x = 0;
@@ -31,7 +34,7 @@ States state = States.STATE_2;
 
 int time;
 //time between state changes
-int wait = 7000;
+int wait = 8000;
 
 //map image holder
 PImage img;
@@ -57,24 +60,21 @@ void setup() {
   //define typeface for use
   mono = createFont("helvetica", 32);
   
+  datalog = new UserSession[100];
+  InitData();
+  
   //DB setup
-    //db = new MySQL( this, "sql3.njit.edu", "aistan_rsrch", "aistan_rsrch", " J8mDan3y" );  // open database file
-    //db.setDebug(false);
-    //db.setDebug(true);
+    db = new MySQL( this, "sql3.njit.edu", "aistan_rsrch", "aistan_rsrch", "J8mDan3y" );  // open database file
+    db.setDebug(false);
+    db.setDebug(true);
     
-        //if ( db.connect() )
-    //{
-        //String[] tableNames = db.getTableNames();
-        //println(tableNames);
-        //db.query( "SELECT * FROM %s", tableNames[0] );
-        /*
-        while (db.next())
-        {
-            TableOne t = new TableOne();
-            db.setFromRow( t );
-            println( t );
-            */
-        //}
+        if ( db.connect() )
+    {
+        String[] tableNames = db.getTableNames();
+        println(tableNames);
+    }
+    
+    
 }
 
 
@@ -86,7 +86,8 @@ case STATE_1 :
   //WriteItinerary(); //State 1 createst the itinerary
   //DatabaseViz(); //State 2 creates a database vizualization
   println("draw State 5 - AI");
-  AIitineraryCounter = DrawAIitinerary(AIitineraryCounter);
+  //AIitineraryCounter = DrawAIitinerary(AIitineraryCounter);
+  DrawAIdata(1);
   //delay(2000);
   break;
 case STATE_2:
@@ -105,17 +106,27 @@ case STATE_4:
   //delay(2000);
   break;
   case STATE_5:
+    DrawAIdata(1);
   println("draw State 5 - AI Draw Itinerary");
+  //delay(2000);
+  break;
+  case STATE_6:
+  println("draw State 6 - Data Textual Screen Dump");
+  //do something to dump a lot of data on the screen
+  //delay(2000);
+  break;
+  case STATE_7:
+  DrawAIdata(1);
+  println("draw State 7 - AI Data Report");
   //delay(2000);
   break;
 }
 
 //draw watermark
-
 textFont(mono);
 textSize(20);
 fill(240,240,240);
-text("[AI]stanbul Blackboard Application 0.8", 12, 22);
+text("[AI]stanbul Blackboard Application 0.85", 12, 22);
   
 
   
@@ -147,11 +158,16 @@ text("[AI]stanbul Blackboard Application 0.8", 12, 22);
       state = States.STATE_5;
     } 
     if(state == States.STATE_5){
+      state = States.STATE_6;
+    } 
+     if(state == States.STATE_6){
+      state = States.STATE_7;
+    } 
+     if(state == States.STATE_7){
       state = States.STATE_1;
     } 
 }
 }
-
 
 public int getState() {
     switch (state) {
@@ -160,8 +176,18 @@ public int getState() {
         case STATE_3: return 3;
         case STATE_4: return 4;
         case STATE_5: return 5;
+        case STATE_6: return 6;
+        case STATE_7: return 7;
     }
     return 0;
+}
+//fill an array with test user data as if from database
+void InitData() {
+  println("run init data");
+  for(int i = 0; i < 30; i++){
+    datalog[i] = new UserSession(i, "Where do you live?", "Home", str(random(40.8, 41.198)), str(random(28.43, 29.48)));
+    println(datalog[i].toString());
+  }
 }
 
 //when the state is set to writing the itinerary, the draw method will call this routine to run
@@ -201,7 +227,7 @@ int[] ConvertCoords() {
  return ret;
 }
 
-//lat/long  lat/long  lat/long  lat/long  size color(single value)
+//lat/long,  lat/long,  lat/long,  lat/long,  size, color(single value)
 void DrawItinerary(float[] a, float[] b, float[] c , float[] d, int e, int s) {
   DrawMapPoint(a, e, s, s, s, "test1");
   //delay(100);
@@ -344,7 +370,7 @@ float ConvertLong(float a){
 }
 
 
-//void DrawMapPoint(float[] a, int e, int c1, int c2, int c3) {
+//lat/long, weight, color, color, color, description
 void DrawMapPoint(float[] a, int e, int c1, int c2, int c3, String description) {
   
   //convert map coordinates to screen coordinates
@@ -410,6 +436,48 @@ void DrawIDs() {
 }
 
 //when the state is set to 5 to draw an autonomous itinerary
+int DrawAIdata(int a) {
+ int pointcounter = 0;
+  pointcounter = a;
+  image(img, 0, 0);
+  
+  textFont(mono);
+  textSize(20);
+  fill(240,240,240);
+  text("Draw Mode 7: Show AI Data", 12, 44);
+  
+  for(int i = 0; i < (datalog.length); i++){
+    //text("User Data Session" + str(datalog[i].id), 12, (100 + (15*i)));
+  }
+  
+  
+  if(pointcounter > 0){
+    //
+  } 
+  if(pointcounter > 1){
+    //
+  } 
+  if(pointcounter > 2){
+    //
+  } 
+  if(pointcounter > 3){
+    //
+  } 
+  if(pointcounter > 4){
+    //
+  } 
+  if(pointcounter > 5){
+      //
+  }
+  if(pointcounter > 6){
+      //
+  } 
+  pointcounter++;
+  println("pointcounter = " + pointcounter);
+  return(pointcounter);
+}
+
+//when the state is set to 5 to draw an autonomous itinerary
 int DrawAIitinerary(int a) {
   int pointcounter = 0;
   pointcounter = a;
@@ -437,25 +505,29 @@ int DrawAIitinerary(int a) {
   sendd[0] = 40.9667;
   sendd[1] = 29.032;
   
-  int e = 10;
+  int e = 5;
   int s = 255;
   
   if(pointcounter > 0){
     DrawMapPoint(senda, e, s, s, s, "test1");
+    //Draw AI Itinerary1 Text
   } 
   if(pointcounter > 1){
     DrawMapPoint(sendb, e, s, s, s, "test2");
+    //Draw AI Itinerary2 Text
   } 
   if(pointcounter > 2){
     DrawMapPoint(sendc, e, s, s, s, "test3");
+    //Draw AI Itinerary3 Text
   } 
   if(pointcounter > 3){
     DrawMapPoint(sendd, e, s, s, s, "test4");
+    //Draw AI Itinerary4 Text
   } 
   if(pointcounter > 4){
     strokeWeight(5);
     stroke(222, 222, 222);
-    line(10, 10, 40, 100);
+    //line(10, 10, 40, 100);
       DrawMapLine(senda, sendb, 5);
   } 
   if(pointcounter > 5){
@@ -552,11 +624,11 @@ DrawItinerary(senda3, sendb3, sendc3, sendd3, 15, 255);
 
 
 //define a series of base itineraries
-float[] historicitinerary1 = {41.05,       28.815,     41.04,     28.947,       41.08,     29.14,     41,       29.18};
-float[] historicitinerary2 = {41.09,     28.82,     41.03,       28.95,       41.09,       29.13,     41.07,   29.18};
-float[] historicitinerary3 = {41.01,       28.82,     41.01,       28.942,     41.091,     29.15,     41.07,   29.19};
-float[] historicitinerary4 = {41.05,       28.815,       41.035,     28.941,       41.085,   29.14,     41,   29.19};
-float[] historicitinerary5 = {40.979,     28.754,     40.955,     28.837,     41.001,         28.979,     40.9667,     29.032};
+float[] historicitinerary1 = {41.05,         28.815,         41.04,       28.947,    41.08,     29.14,     41,       29.18};
+float[] historicitinerary2 = {41.09,         28.82,          41.03,       28.95,     41.09,     29.13,     41.07,    29.18};
+float[] historicitinerary3 = {41.01,         28.82,          41.01,       28.942,    41.091,    29.15,     41.07,    29.19};
+float[] historicitinerary4 = {41.05,         28.815,         41.035,      28.941,    41.085,    29.14,     41,       29.19};
+float[] historicitinerary5 = {40.979,        28.754,         40.955,      28.837,    41.001,    28.979,    40.9667,  29.032};
 float[][] stock = new float[5][8];
 stock[0] = historicitinerary1;
 stock[1] = historicitinerary2;
@@ -668,4 +740,47 @@ if (source != null) {
 
   }
 }
+
+}
+
+//Object to store each user session. These can be loaded into some container and then queried offline in case database connection is lost.
+class UserSession
+{
+    public int id;
+    public int qindex;
+    public int datetime;
+    public String question;
+    public String Category;
+    public String Type;
+    public String FeatureType;
+    public String FeatureName;
+    public String Lat;
+    public String Long;
+    public String answer;
+    
+    //id, question, answer, lat, long
+    UserSession(int a, String b, String c, String d, String e) {
+      id = a;
+      question = b;
+      answer = c;
+      Lat = d;
+      Long = e;
+    }
+
+    
+   
+   public String toString ()
+    {
+        //return String.format("id: %i, question: %s answer: %s", id, question, answer);
+        return String.format("id: " + str(id) + ", question: " + question + " answer: " + answer);
+    }
+    
+    
+    public void setId ( int id ) {
+        this.id = id;
+    }
+    
+    public int getId () {
+        return id;
+    }
 }

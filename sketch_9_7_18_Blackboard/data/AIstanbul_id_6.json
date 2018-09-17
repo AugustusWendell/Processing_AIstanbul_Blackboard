@@ -1,0 +1,11 @@
+{
+  "FeatureType": "NULL",
+  "datetime": 2018,
+  "Type": "map",
+  "Category": "Biraz kendinizden bahseder misiniz? / Tell me a little bit about yourself.",
+  "question": "Where do you live?",
+  "id": 6,
+  "Lat": "41.04",
+  "qindex": 3,
+  "FeatureName": "NULL"
+}
