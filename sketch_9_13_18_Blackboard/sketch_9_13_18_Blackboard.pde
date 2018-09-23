@@ -17,6 +17,7 @@ AISession[] ailog;
 
 Itinerary[] itineraries;
 Itinerary[] AIitineraries;
+Feature[] features;
 
 //[AI]stanbul Blackboard application
 
@@ -34,25 +35,37 @@ String order = "kebab";
 
 //typeface font holder
 PFont mono;
+PFont bold;
 
 //print text to screen variables
 String printtoscreen;
 int printtoscreencounter = 0;
+int printtoscreencounter2 = 0;
 
 int usersessioncount = 500;
 int AIsessioncount = 500;
 int itinerariescount = 0;
 int AIitinerariescount = 0;
+int featurecount = 0;
 
 States state = States.STATE_1;
 
 int time;
 //time between state changes
-int wait = 20000;
+int wait = 15000;
 
 //map image holder
 PImage img;
 PImage imgCC;
+
+//colors
+color colorHome = color(200, 200, 200);
+color colorWork = color(50, 50, 50);
+color colorFood = color(0, 152, 97);
+color colorActivities = color(0, 86, 152);
+color colorNostalgia = color(255, 204, 0);
+color colorAI = color(255, 50, 0);
+
 
 //DB
 MySQL db;
@@ -83,27 +96,36 @@ void setup() {
   fill(102);
   smooth(4);
   time = millis();//store the current time
-  frameRate(30);
+  frameRate(40);
 
   //load in the image being used for the map
   img = loadImage("MAP_1920_1080.png");
   imgCC = loadImage("CITY_1920_1080.png");
 
   //define typeface for use
-  mono = createFont("helvetica", 32);
+  //mono = createFont("helvetica.ttf", 32);
+  //mono = createFont("af_drs.ttf", 20);
+  mono = createFont("Arial-Unicode-Regular.ttf", 20);
+
+  //bold = createFont("Helvetica Black Cyrillic Bold.ttf", 32);
+  bold = createFont("HELR65W.ttf", 20);
+
 
   printtoscreencounter = 0;
 
-  datalog = new UserSession[400];
-  ailog = new AISession[30];
-  itineraries = new Itinerary[200];
-  AIitineraries = new Itinerary[200];
+  datalog = new UserSession[20000];
+  ailog = new AISession[5000];
+  itineraries = new Itinerary[5000];
+  AIitineraries = new Itinerary[5000];
+  features = new Feature[5000];
   DownloadDB(); //goes to the GoDaddy database and pulls all the data down, writes json files locally.
   DownloadAIDB();
   ImportData(); //imports the json files from the local drive
   FindItineraries();
   ImportItineraries();
   ImportAIItineraries();
+  FindFeatureNames();
+  //PrintFeaturesDebug();
 }
 
 void DownloadDB() {
@@ -360,7 +382,7 @@ void ImportItineraries() {
 
     itineraries[i] = new Itinerary(temp1, temp2, temp3, temp4, 1);
   }
-} 
+}
 
 
 void ImportAIItineraries() {
@@ -394,7 +416,7 @@ void ImportAIItineraries() {
 
     AIitineraries[i] = new Itinerary(temp1, temp2, temp3, temp4, 1);
   }
-} 
+}
 
 void ImportData() {
 
@@ -422,73 +444,85 @@ void ImportData() {
 
     datalog[i] = new UserSession(id, qindex, datetime, question, Category, Type, FeatureType, FeatureName, Lat, Lon, answer);
   }
-} 
+}
 
 void draw() {
 
   switch (state) {
   case STATE_1 : //  1 Boot Mode
-    DrawInitialize();
+    ScreenInitialize();
+    //ListRecentDataPoints();
     break;
   case STATE_2: // 2 List of all or recent data points - makes clear that there are users, Last few at the top of the screen. 1 per user
-    ListRecentDataPoints();
+    //ListFeatures();
+    DrawInitialize();
     break;
   case STATE_3: //3 Same Data as Points on the screen: Color Coded, could be a few modes in here…….Home, Food, Activities, Work
-    DrawIDs(); //State 4 shows all ID location
+    ListRecentDataPoints();
     break;
   case STATE_4: //4 Draw connections between them, to visually build itineraries - colored by user
-    DrawCCIDs(); //State 4 shows all ID locations
+    DrawIDs(); //State 4 shows all ID location
     break;
   case STATE_5: //5 Isolate one itinerary and place images along it
-    //DrawNostalgiaIDs();
-    DrawItineraries();
+    DrawCCIDs(); //State 4 shows all ID locations
     break;
   case STATE_6: //6 AI Boot Screen?
-    DrawCCItineraries();
-    //DrawAIInitialize();
+    DrawNostalgiaIDs();
+    //DrawWishbox();
     break;
   case STATE_7: //7 AI writes out data points as text
-    PlaceImageFeatureName();
+    DrawItineraries();
     //AIitineraryCounter = DrawAIitinerary(AIitineraryCounter);
     break;
-  case STATE_8: //8 AI draws as dots
-    PlaceCCImageFeatureName();
+  case STATE_8: //8 AI draws as dots  
+    DrawCCItineraries();
     //DatabaseViz();
     break;
   case STATE_9: //9 AI Connects with lines to build itinerary
-    DrawAIdata(1);
+    PlaceImageFeatureName(3);
     break;
   case STATE_10: //10 AI reports textually on the itinerary and what it has learned
-    //println("draw State 10");
-    AI_Text_Itinerary();
+    PlaceCCImageFeatureName(5);
     break;
   case STATE_11:
-    //println("draw State 9");
-    MapAllNodes();
+    DrawAIInitialize();
     break;
   case STATE_12:
-    //println("draw State 9");
-    GridData();
+    DrawAIdata(1);
     break;
   case STATE_13:
-    //println("draw State 9");
-    GridData();
+    //AI_Text_Itinerary();
+    DrawAIitinerary(2000);
     break;
   case STATE_14:
-    //println("draw State 9");
-    GridData();
+
+    DrawAIItineraries();
     break;
   case STATE_15:
-    //println("draw State 9");
+    DrawAICCItineraries();
+    break;
+  case STATE_16:
     GridData();
     break;
+    //case STATE_17: 
+    //MapAllNodes();
+    //break;
   }
+
+
+  int d = day();    // Values from 1 - 31
+  int m = month();  // Values from 1 - 12
+  int y = year();
+  int s = second();  // Values from 0 - 59
+  int min = minute();  // Values from 0 - 59
+  int h = hour();    // Values from 0 - 23
 
   //draw watermark
   textFont(mono);
   textSize(20);
-  fill(240, 240, 240);
-  text("[AI]stanbul Blackboard Application 0.85", 12, 22);
+  fill(188, 188, 188);
+  text("[AI]stanbul Blackboard Application 0.95      "+state+"          " +m+ "_" +d+ "  "+h+"hours "+min+"minutes "+s+"seconds", 12, 22);
+  text("Draw timing: " + millis() + " milliseconds", 1500, 22);
 
   //check the difference between now and the previously stored time is greater than the wait interval
   if (millis() - time >= wait) {
@@ -496,13 +530,7 @@ void draw() {
     time = millis();//also update the stored time
 
     //save the current draw screen
-    int d = day();    // Values from 1 - 31
-    int m = month();  // Values from 1 - 12
-    int y = year();
-    int s = second();  // Values from 0 - 59
-    int min = minute();  // Values from 0 - 59
-    int h = hour();    // Values from 0 - 23
-    save("screencaptures/AIstanbul"+"_"+y+m+d+"/ScreenCapture" +y+m+d+"_"+h+min+s+ ".jpg");
+    save("screencaptures/"+state+"/ScreenCapture"+y+m+d+"_"+h+min+".jpg");
 
     //clear the screen
     background(0);
@@ -511,9 +539,10 @@ void draw() {
 
     textSize(30);
     fill(120, 120, 120);
-    text("[AI]istanbul Refresh - Changing Modes", 12, 120);
-    text("Computer Learning Drawing Mode = " + state, 12, 160);
-
+    text("[AI]istanbul Refresh - Loading New Drawing Mode", 12, 120);
+    text("[AI]istanbul Refresh - Yeni Çizim Modu Yükleniyor", 12, 160);
+    text("Computer Learning Drawing Mode = " + state, 12, 200);
+    delay(3000);
     //changes the state to toggle the behaviour of the blackboard
     if (state == States.STATE_1) {
       state = States.STATE_2;
@@ -558,8 +587,11 @@ void draw() {
                                 state = States.STATE_15;
                               } else
                                 if (state == States.STATE_15) {
-                                  state = States.STATE_1;
-                                }
+                                  state = States.STATE_16;
+                                } else
+                                  if (state == States.STATE_16) {
+                                    state = States.STATE_1;
+                                  }
   }
 }
 
@@ -597,53 +629,42 @@ public int getState() {
 void AI_Text_Itinerary() {
   image(imgCC, 0, 0);
 
-  textSize(10);
-  fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
-  text("Draw Mode: Report AI itinerary", 12, 24);
+  textFont(mono);
+  textSize(20);
+  fill(240, 240, 240);
+  text("Draw Mode: Report AI itinerary", 12, 500);
 }
 
-
-void DrawCityCenter() {
-  image(imgCC, 0, 0);
-
-  textSize(10);
-  fill(200, 200, 200);
+void ScreenInitialize() {
   stroke(200, 200, 200);
   strokeWeight(1);
-  text("Draw Mode: City Center", 12, 24);
-
-  float[] senda2 = new float[2];
-  senda2[0] = 41.0196489;
-  senda2[1] = 28.968630;
-  float[] sendb2 = new float[2];
-  sendb2[0] = 41.017613;
-  sendb2[1] = 28.98006;
-  float[] sendc2 = new float[2];
-  sendc2[0] = 41.002489;
-  sendc2[1] = 28.978806;
-  float[] sendd2 = new float[2];
-  sendd2[0] = 41.002913;
-  sendd2[1] = 28.961430;
-  DrawCCItinerary(senda2, sendb2, sendc2, sendd2, 2, 200);
+  textFont(bold);
+  textSize(20);
+  fill(240, 240, 240);
+  text("Contacting [AI]stanbul database", 12, 44);
+  String a = "Contacting [AI]stanbul database_____";
+  PrintToScreenLoop(a, 12, 500);
 }
 
 void DrawItineraries() {
   image(img, 0, 0);
 
-  textSize(10);
-  fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
-  text("Güzergahlar Çiziliyor", 12, 24);
-  text("Draw Mode: User Itineraries", 12, 36);
-  text("Draw timing: " + millis() + " milliseconds", 1800, 36);
+  textFont(mono);
+  textSize(20);
+  fill(240, 240, 240);
+  text("Güzergahlar Çiziliyor", 12, 44);
+  text("Draw Mode: User Itineraries", 12, 64);
+  color c;
+  c = color(255, 255, 255);
 
   for (int i = 0; i < printtoscreencounter; i++) {
     //for(int i = 0; i < itineraries.length; i++){
     try {
-      DrawItinerary(itineraries[i]);
+      DrawItinerary(itineraries[i], c, "User Itinerary Point");
       //println("draw itinerary " + i);
     }
     catch (NullPointerException e) {
@@ -651,18 +672,42 @@ void DrawItineraries() {
   }
   //println(printtoscreencounter);
   printtoscreencounter++;
-  delay(10000/itinerariescount);
+  delay((wait/2)/itinerariescount);
+}
+
+void DrawAIItineraries() {
+  image(img, 0, 0);
+
+  stroke(200, 200, 200);
+  strokeWeight(1);
+  textFont(mono);
+  textSize(20);
+  fill(240, 240, 240);
+  text("Güzergahlar Çiziliyor", 12, 44);
+  text("Draw Mode: Artificial Intelligence Itineraries", 12, 64);
+
+  for (int i = 0; i < printtoscreencounter; i++) {
+    //for(int i = 0; i < itineraries.length; i++){
+    try {
+      DrawItinerary(AIitineraries[i], colorAI, "Markov Model Results");
+    }
+    catch (NullPointerException e) {
+    }
+  }
+  //println(printtoscreencounter);
+  printtoscreencounter++;
+  delay((wait/2)/AIitinerariescount);
 }
 
 void DrawCCItineraries() {
   image(imgCC, 0, 0);
 
-  textSize(10);
-  fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
-  text("Draw Mode: User Itineraries, City Center", 12, 24);
-  text("Draw timing: " + millis() + " milliseconds", 1700, 36);
+  textFont(mono);
+  textSize(20);
+  fill(240, 240, 240);
+  text("Draw Mode: User Itineraries, City Center", 12, 44);
 
   for (int i = 0; i < printtoscreencounter; i++) {
     //for(int i = 0; i < itineraries.length; i++){
@@ -676,33 +721,42 @@ void DrawCCItineraries() {
   }
   //println(printtoscreencounter);
   printtoscreencounter++;
-  delay(10000/itinerariescount);
+  delay((wait/2)/itinerariescount);
+}
+
+void DrawAICCItineraries() {
+  image(imgCC, 0, 0);
+
+  stroke(200, 200, 200);
+  strokeWeight(1);
+  textFont(mono);
+  textSize(20);
+  fill(240, 240, 240);
+  text("Draw Mode: Artificial Intelligence Itineraries, City Center", 12, 44);
+
+  for (int i = 0; i < printtoscreencounter; i++) {
+    //for(int i = 0; i < itineraries.length; i++){
+    try {
+      DrawCCItinerary(AIitineraries[i], 1, 5, ((255/AIitinerariescount) * i), str(i));
+    }
+    catch (NullPointerException e) {
+    }
+  }
+  //println(printtoscreencounter);
+  printtoscreencounter++;
+  delay((wait/2)/AIitinerariescount);
 }
 
 void DrawInitialize() {
-  //image(img, 0, 0);
-  /*
-  println("DrawInitialize Method called");
-   
-   textSize(30);
-   fill(200,200,200);
-   text("BOOT MODE", 12, 24);
-   
-   text("[AI]stanbul Initialize Blackboard", 12, 48);
-   
-   text("Initialize Drawing Engine", 12, 72);
-   
-   text("Loading Base Map", 12, 96);
-   */
+  image(img, 0, 0);
 
   String a = "Initializing [AI]stanbul Blackboard Machine Learning Application \nUser Input Data Parsed. " + usersessioncount + " answers downloaded from database \nSearched for complete itineraries. " + itinerariescount + " complete itineraries loaded from data";
-  PrintToScreen(a, 12, 100);
+  PrintToScreen(a, 12, 500);
 }
 
 void DrawAIInitialize() {
   image(img, 0, 0);
 
-  text("Draw timing: " + millis() + " milliseconds", 1700, 36);
   /*
   println("DrawInitialize Method called");
    
@@ -717,27 +771,28 @@ void DrawAIInitialize() {
    text("Loading Base Map", 12, 96);
    */
 
-  String a = "Initializing [AI]stanbul Artifical Intelligence Engine";
-  PrintToScreen(a, 12, 100);
+  String a = "Initializing [AI]stanbul Artificial Intelligence Engine_____";
+  PrintToScreenLoop(a, 12, 500);
 }
 
 //called during each MODE transition to reset all variables needed
 void ResetVars() {
   printtoscreencounter = 0;
+  printtoscreencounter2 = 0;
   printtoscreen = "Debug [AI]istanbul data";
   int AIitineraryCounter = 1;
-  //println("ResetVars");
 }
 
 //when the state is set to writing the itinerary, the draw method will call this routine to run
 void WriteItinerary() {
   image(img, 0, 0);
 
-  fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
-  text("Draw Mode 1: Itinerary", 12, 24);
-  text("Draw timing: " + millis() + " milliseconds", 1700, 36);
+  textFont(mono);
+  textSize(20);
+  fill(240, 240, 240);
+  text("Draw Mode 1: Itinerary", 12, 44);
 
 
   //create new query to get data from the database to populate the mad lib itinerary
@@ -793,6 +848,21 @@ void DrawItinerary(Itinerary i) {
   DrawMapPoint(i.point3, 5, 255, 255, 255, "test3");
   //delay(100);
   DrawMapPoint(i.point4, 5, 255, 255, 255, "test4");
+  //delay(100);
+  DrawMapLine(i.point1, i.point2, 5);
+  //delay(100);
+  DrawMapLine(i.point2, i.point3, 5);
+  //delay(100);
+  DrawMapLine(i.point3, i.point4, 5);
+}
+
+void DrawItinerary(Itinerary i, color c, String s) {
+  DrawMapPoint(i.point1, 5, c, s);
+  DrawMapPoint(i.point2, 5, c, s);
+  //delay(100);
+  DrawMapPoint(i.point3, 5, c, s);
+  //delay(100);
+  DrawMapPoint(i.point4, 5, c, s);
   //delay(100);
   DrawMapLine(i.point1, i.point2, 5);
   //delay(100);
@@ -881,6 +951,7 @@ void PlaceImage(float[] a, PImage b, String c) {
   fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
+  textFont(mono);
   //using convert methods to simplify the code
   float drawlat = ConvertLat(a[0]);
   float drawlong = ConvertLong(a[1]);
@@ -890,9 +961,9 @@ void PlaceImage(float[] a, PImage b, String c) {
   //draw the image
   image(b, drawlong, drawlat);
 
-  textSize(10);
+  textSize(15);
   fill(200, 200, 200);
-  text(c, (drawlong + 20), (drawlat + 20));
+  text(c, (drawlong - 20), (drawlat - 20));
 }
 
 //float[lat, long], image to be displayed, String info
@@ -900,6 +971,7 @@ void PlaceCCImage(float[] a, PImage b, String c) {
   fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
+  textFont(mono);
   //using convert methods to simplify the code
   float drawlat = ConvertCCLat(a[0]);
   float drawlong = ConvertCCLong(a[1]);
@@ -909,9 +981,9 @@ void PlaceCCImage(float[] a, PImage b, String c) {
   //draw the image
   image(b, drawlong, drawlat);
 
-  textSize(10);
+  textSize(15);
   fill(200, 200, 200);
-  text(c, (drawlong + 20), (drawlat + 20));
+  text(c, (drawlong - 20), (drawlat - 20));
 }
 
 float ConvertLat(float a) {
@@ -970,6 +1042,7 @@ void DrawMapPoint(float[] a, int e, int c1, int c2, int c3, String description) 
   fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
+  textFont(mono);
   //using convert methods to simplify the code
   float drawlat = ConvertLat(a[0]);
   //println("Draw Lat = " + drawlat);
@@ -984,10 +1057,30 @@ void DrawMapPoint(float[] a, int e, int c1, int c2, int c3, String description) 
 }
 
 //lat/long, weight, color, color, color, description
+void DrawMapPoint(float[] a, int e, color c, String description) {
+  fill(200, 200, 200);
+  stroke(200, 200, 200);
+  strokeWeight(1);
+  textFont(mono);
+  //using convert methods to simplify the code
+  float drawlat = ConvertLat(a[0]);
+  //println("Draw Lat = " + drawlat);
+  float drawlong = ConvertLong(a[1]);
+  //println("Draw Long = " + drawlong);
+
+  fill(c);
+  ellipse(drawlong, drawlat, e, e);
+  textSize(10);
+  fill(200, 200, 200);
+  text(description, (drawlong + e), (drawlat + e));
+}
+
+//lat/long, weight, color, color, color, description
 void DrawCCMapPoint(float[] a, int e, int c1, int c2, int c3, String description) {
   fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
+  textFont(mono);
   float drawlat = ConvertCCLat(a[0]);
   //println("CC Draw Lat = " + drawlat);
   float drawlong = ConvertCCLong(a[1]);
@@ -1002,38 +1095,78 @@ void DrawCCMapPoint(float[] a, int e, int c1, int c2, int c3, String description
   text(description, (drawlong + e), (drawlat + e));
 }
 
+//lat/long, weight, color, color, color, description
+void DrawCCMapPoint(float[] a, int e, color c, String description) {
+  fill(200, 200, 200);
+  stroke(200, 200, 200);
+  strokeWeight(1);
+  textFont(mono);
+  float drawlat = ConvertCCLat(a[0]);
+  //println("CC Draw Lat = " + drawlat);
+  float drawlong = ConvertCCLong(a[1]);
+  //println("CC Draw Long = " + drawlong);
+
+  fill(c);
+  //ellipse(drawlat, drawlong, e, e);
+  ellipse(drawlong, drawlat, e, e);
+  textSize(10);
+  fill(200, 200, 200);
+  //text(description + drawlong + drawlat, (drawlong + e), (drawlat + e));
+  text(description, (drawlong + e), (drawlat + e));
+}
+
 void  ListRecentDataPoints() {
   image(img, 0, 0);
-
   stroke(200, 200, 200);
   strokeWeight(1);
   textFont(mono);
   textSize(20);
   fill(240, 240, 240);
   text("Draw Mode: List Recent Data", 12, 44);
+  fill(200, 200, 200);
 
-  text("Draw timing: " + millis() + " milliseconds", 1700, 36);
-  int r = datalog.length;
-  int counter = 0;
+  /*
+  //for (int i = featurecount; i > 5; i--) {
+   for (int i = 1; i < featurecount; i++) {
+   try {
+   //text("Feature Input Found. Feature Name: "+features[i].name, 200, (70 + (17 * i)));
+   text("Feature Input Found. Feature Name: "+features[(featurecount - i)].name, 200, (70 + (17 * i)));
+   } 
+   catch (NullPointerException f) {
+   }
+   }
+   delay((wait/4)/featurecount);
+   */
 
-  for (int i = (r-1); i > 0; i--) {
-    //for(int i = printtoscreencounter; i < r; i++){
+  if (printtoscreencounter < featurecount) {
+    fill(200, 200, 200);
+    for (int i = 0; i < printtoscreencounter; i++) {
+      try {
+        text("Feature Input Found. Feature Name: "+features[(featurecount - i)].name, 200, (70 + (17 * i)));
+      } 
+      catch (NullPointerException e) {
+      }
+    }
+    printtoscreencounter++;
+    delay((wait)/featurecount);
+  }
+}
+
+void  ListFeatures() {
+  for (int i = 0; i < datalog.length; i++) {
     try {
       if (datalog[i].FeatureName.length() > 4) { 
-        textSize(15);
-        fill(220, 220, 220);
-        text("User Data Session Information " + i + " ", 12, (70 + (15 * counter)));
-        fill(255, 100, 100);
-        text(datalog[i].FeatureName, 350, (70 + (15 * counter)));
-        //println("writing out user session data for FeatureName "+ i + " " + datalog[i].FeatureName);
-        counter++;
-      } else
-        println("not writing out user session data");
+        //println("feature found");
+        //println("featurecount = "+featurecount);
+        println(datalog[i].FeatureName);
+      }
     }
     catch (NullPointerException e) {
     }
   }
 }
+
+
 
 //when the state is set to show the IDs, the draw method will call this routine to run
 void DrawIDs() {
@@ -1042,19 +1175,22 @@ void DrawIDs() {
   stroke(200, 200, 200);
   strokeWeight(1);
   textSize(20);
+  textFont(mono);
   text("Draw Mode 4: Show All DataPoints", 12, 44);
 
-  text("Draw timing: " + millis() + " milliseconds", 1700, 36);
 
-  fill(200, 44, 44);
-  text("Home", 12, 100);
-  fill(150, 44, 44);
-  text("Work", 12, 150);
-  fill(0, 0, 255);
-  text("Food", 12, 200);
-  fill(0, 0, 128);
-  text("Activities", 12, 250);
+  textFont(bold);
+  textSize(50);
+  fill(colorFood);
+  text("Ev / Home", 12, 200);
+  fill(colorHome);
+  text("İş / Work", 12, 300);
+  fill(colorWork);
+  text("Yemek / Food", 12, 400);
+  fill(colorActivities);
+  text("Etkinlikler / Activities", 12, 500);
 
+  textFont(mono);
   //for(int i = 0; i < datalog.length; i++){
   for (int i = 0; i < printtoscreencounter; i++) {
     try {
@@ -1065,25 +1201,25 @@ void DrawIDs() {
           temp[1] = float(datalog[i].Lon);
           if (datalog[i].qindex == 1000) {
             //DrawMapPoint(temp, 10, 255,0,0, (str(datalog[i].id) + " " + datalog[i].FeatureName));
-            DrawMapPoint(temp, 10, 200, 44, 44, datalog[i].FeatureName);
+            DrawMapPoint(temp, 10, 200, 200, 200, datalog[i].FeatureName);
           } else
             if (datalog[i].qindex == 1001) {
               //DrawMapPoint(temp, 10, 0, 255, 0, (str(datalog[i].id) + " " + datalog[i].FeatureName));
-              DrawMapPoint(temp, 10, 150, 44, 44, datalog[i].FeatureName);
+              DrawMapPoint(temp, 10, 50, 50, 50, datalog[i].FeatureName);
             } else
               if (datalog[i].qindex == 2001) {
                 //DrawMapPoint(temp, 10, 0,0,255, (str(datalog[i].id) + " " + datalog[i].FeatureName));
-                DrawMapPoint(temp, 10, 0, 0, 255, datalog[i].FeatureName);
+                DrawMapPoint(temp, 10, 0, 152, 97, datalog[i].FeatureName);
               } else
                 if (datalog[i].qindex == 3002) {
                   //DrawMapPoint(temp, 10, 0,0,128, (str(datalog[i].id) + " " + datalog[i].FeatureName));
-                  DrawMapPoint(temp, 10, 0, 0, 128, datalog[i].FeatureName);
+                  DrawMapPoint(temp, 10, 0, 86, 152, datalog[i].FeatureName);
                 }
         }
       }
     } 
     catch (NullPointerException e) {
-      println("exception called during ID drawing routine");
+      //println("exception called during ID drawing routine");
     }
   } 
   //println(printtoscreencounter);
@@ -1101,13 +1237,16 @@ void DrawIDs() {
 //when the state is set to show the IDs, the draw method will call this routine to run
 void DrawNostalgiaIDs() {
   image(img, 0, 0);
+
+  textFont(mono);
   fill(200, 200, 200);
   textSize(20);
   text("Draw Mode 4: Show All DataPoints: Nostalgia", 12, 44);
-  text("Draw timing: " + millis() + " milliseconds", 1700, 36);
 
-  fill(200, 44, 44);
-  text("Nostalgia", 12, 100);
+  textFont(bold);
+  fill(colorNostalgia);
+  textSize(50);
+  text("Nostalgia", 12, 200);
 
   //for(int i = 0; i < datalog.length; i++){
   for (int i = 0; i < printtoscreencounter; i++) {
@@ -1118,8 +1257,47 @@ void DrawNostalgiaIDs() {
         if (datalog[i].Lon != null) {
           temp[1] = float(datalog[i].Lon);
           if (datalog[i].qindex == 1004) {
-            //DrawMapPoint(temp, 10, 255,0,0, (str(datalog[i].id) + " " + datalog[i].FeatureName));
-            DrawMapPoint(temp, 10, 200, 44, 44, datalog[i].FeatureName);
+            DrawMapPoint(temp, 10, colorNostalgia, "Unique User ID #"+datalog[i].id);
+          } else {
+          }
+        }
+      }
+    } 
+    catch (NullPointerException e) {
+      //println("exception called during ID drawing routine");
+    }
+  } 
+  printtoscreencounter++;
+  if (printtoscreencounter > datalog.length) {
+    printtoscreencounter = datalog.length;
+  }
+}
+
+
+
+
+void DrawWishbox() {
+  image(img, 0, 0);
+
+  textFont(mono);
+  fill(200, 200, 200);
+  textSize(20);
+  text("Draw Mode: Wishbox", 12, 44);
+
+  fill(152, 0, 0);
+  textSize(50);
+  text("Wishbox", 12, 100);
+
+  //for(int i = 0; i < datalog.length; i++){
+  for (int i = 0; i < printtoscreencounter; i++) {
+    try {
+      float[] temp = new float[2];
+      if (datalog[i].Lat != null) {
+        temp[0] = float(datalog[i].Lat);
+        if (datalog[i].Lon != null) {
+          temp[1] = float(datalog[i].Lon);
+          if (datalog[i].qindex == 4000) {
+            DrawMapPoint(temp, 10, 255, 255, 255, datalog[i].answer);
           } else {
           }
         }
@@ -1136,8 +1314,6 @@ void DrawNostalgiaIDs() {
 }
 
 
-
-
 //when the state is set to show the IDs, the draw method will call this routine to run
 void DrawCCIDs() {
   image(imgCC, 0, 0);
@@ -1146,17 +1322,19 @@ void DrawCCIDs() {
   strokeWeight(1);
   textSize(20);
   text("Draw Mode 4: Show All DataPoints, CityCenter", 12, 44);
-  text("Draw timing: " + millis() + " milliseconds", 1700, 36);
 
-  fill(255, 0, 0);
-  text("Home", 12, 100);
-  fill(0, 255, 0);
-  text("Work", 12, 150);
-  fill(0, 0, 255);
-  text("Istanbul", 12, 200);
-  fill(0, 0, 128);
-  text("Nostalgia", 12, 250);
+  textFont(bold);
+  textSize(50);
+  fill(colorFood);
+  text("Ev / Home", 12, 200);
+  fill(colorHome);
+  text("İş / Work", 12, 300);
+  fill(colorWork);
+  text("Yemek / Food", 12, 400);
+  fill(colorActivities);
+  text("Etkinlikler / Activities", 12, 500);
 
+  textFont(mono);
   //for(int i = 0; i < datalog.length; i++){
   for (int i = 0; i < printtoscreencounter; i++) {
     try {
@@ -1166,19 +1344,19 @@ void DrawCCIDs() {
         if (datalog[i].Lon != null) {
           temp[1] = float(datalog[i].Lon);
           if (datalog[i].qindex == 1000) {
-            DrawCCMapPoint(temp, 10, 255, 0, 0, datalog[i].FeatureName);
+            DrawCCMapPoint(temp, 10, 200, 200, 200, datalog[i].FeatureName);
           } else
             if (datalog[i].qindex == 1001) {
-              DrawCCMapPoint(temp, 10, 0, 255, 0, datalog[i].FeatureName);
+              DrawCCMapPoint(temp, 10, 50, 50, 50, datalog[i].FeatureName);
             } else
               if (datalog[i].qindex == 1002) {
-                DrawCCMapPoint(temp, 10, 0, 0, 255, datalog[i].FeatureName);
+                DrawCCMapPoint(temp, 10, 0, 152, 97, datalog[i].FeatureName);
               } else
                 if (datalog[i].qindex == 2001) {
-                  DrawCCMapPoint(temp, 10, 0, 0, 128, datalog[i].FeatureName);
+                  DrawCCMapPoint(temp, 10, 0, 86, 152, datalog[i].FeatureName);
                 } else
-                  if (datalog[i].qindex == 2007) {
-                    DrawCCMapPoint(temp, 10, 0, 128, 0, datalog[i].FeatureName);
+                  if (datalog[i].qindex == 3002) {
+                    DrawCCMapPoint(temp, 10, 0, 0, 0, datalog[i].FeatureName);
                   } else
                     DrawCCMapPoint(temp, 10, (int(i*(255/datalog.length))), (int(i*(255/datalog.length))), (int(i*(255/datalog.length))), datalog[i].FeatureName);
         }
@@ -1196,24 +1374,36 @@ void DrawCCIDs() {
   }
 }
 
-//when the state is set to show the IDs, the draw method will call this routine to run
-void PlaceImageFeatureName() {
-  image(img, 0, 0);
-  fill(200, 200, 200);
-  stroke(200, 200, 200);
-  strokeWeight(1);
-  textSize(10);
-  text("Draw Mode: Place Image based on Feature Name", 12, 24);
-
+void FindFeatureNames() {
   for (int i = 0; i < datalog.length; i++) {
     try {
       if (datalog[i].FeatureName.length() > 4) { 
-        Float imagelat = float(datalog[i].Lat);
-        Float imagelon = float(datalog[i].Lon);
-        searchforgoogleimages(imagelat, imagelon, datalog[i].FeatureName);
-        //PlaceImage(loc, webImg, datalog[i].FeatureName);
-      } else
-        println("not writing out user session data");
+        //println("feature found");
+        //println("featurecount = "+featurecount);
+        String featureName = datalog[i].FeatureName;
+        println(datalog[i].FeatureName);
+        Float featureLat = float(datalog[i].Lat);
+        println(datalog[i].Lat);
+        Float featureLon = float(datalog[i].Lon);
+        println(datalog[i].Lon);
+        features[featurecount] = new Feature(featureName, featureLat, featureLon);
+        println(features[featurecount].toString());
+
+        println("featurecount = "+featurecount);
+        featurecount++;
+      }
+    }
+    catch (NullPointerException e) {
+    }
+  }
+}
+
+void PrintFeaturesDebug() {
+  for (int i = 0; i < features.length; i++) {
+    try {
+      println(features[i].name);
+      println(features[i].toString());
+      featurecount++;
     }
     catch (NullPointerException e) {
     }
@@ -1221,22 +1411,65 @@ void PlaceImageFeatureName() {
 }
 
 //when the state is set to show the IDs, the draw method will call this routine to run
-void PlaceCCImageFeatureName() {
-  image(imgCC, 0, 0);
+void PlaceImageFeatureName(int a) {
+  image(img, 0, 0);
   fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
   textSize(10);
   text("Draw Mode: Place Image based on Feature Name", 12, 24);
 
-  for (int i = 0; i < datalog.length; i++) {
+  println("PlaceImageFeatureName called");
+  textFont(mono);
+  for (int i = 0; i < (features.length - 1); i++) {
     try {
-      if (datalog[i].FeatureName.length() > 4) { 
-        Float imagelat = float(datalog[i].Lat);
-        Float imagelon = float(datalog[i].Lon);
-        searchCCforgoogleimages(imagelat, imagelon, datalog[i].FeatureName);
-      } else
-        println("not writing out user session data");
+      float[] f = new float[2];
+      f[0] = features[i].lat;
+      f[1] = features[i].lon;
+      DrawMapPoint(f, 4, 60, 60, 60, features[i].name);
+    }
+    catch (NullPointerException e) {
+    }
+  }
+
+
+  for (int i = 0; i < a; i++) {
+    try {
+      Feature r = features[int(random(featurecount))];
+      println("searching for feature specific images "+r.name+" "+r.lat+" "+r.lon);
+      searchforgoogleimages(r.lat, r.lon, r.name);
+    }
+    catch (NullPointerException e) {
+    }
+  }
+}
+
+//when the state is set to show the IDs, the draw method will call this routine to run
+void PlaceCCImageFeatureName(int a) {
+  image(imgCC, 0, 0);
+  fill(200, 200, 200);
+  stroke(200, 200, 200);
+  strokeWeight(1);
+  textSize(10);
+  text("Draw Mode: Place Image based on Feature Name", 12, 24);
+  textFont(mono);
+  for (int i = 0; i < (features.length - 1); i++) {
+    try {
+      float[] f = new float[2];
+      f[0] = features[i].lat;
+      f[1] = features[i].lon;
+      DrawCCMapPoint(f, 4, 60, 60, 60, features[i].name);
+    }
+    catch (NullPointerException e) {
+    }
+  }
+
+
+  for (int i = 0; i < a; i++) {
+    try {
+      Feature r = features[int(random(featurecount))];
+      println("searching for feature specific images "+r.name+" "+r.lat+" "+r.lon);
+      searchCCforgoogleimages(r.lat, r.lon, r.name);
     }
     catch (NullPointerException e) {
     }
@@ -1265,41 +1498,55 @@ void GridData() {
   for (int i = 0; i < (h/linebreak); i++) {
     for (int y = 0; y < linebreak; y++) {
       try {
-        if (datalog[count].qindex == 1000) {
-          fill(255, 0, 0);
+        if (datalog[count].qindex == 1000 ) {
+          fill(colorHome);
         }
       } 
       catch (NullPointerException e) {
       }
       try {
-        if (datalog[count].qindex == 1002) {
-          fill(255, 0, 255);
+        if (datalog[count].qindex == 1002 || datalog[count].qindex == 1001) {
+          fill(colorWork);
         }
       }
       catch (NullPointerException e) {
       }
       try {
-        if (datalog[count].qindex == 1003) {
+        if (datalog[count].qindex == 1003 || datalog[count].qindex == 1004 || datalog[count].qindex == 1005) {
           fill(255, 255, 0);
         }
       }
       catch (NullPointerException e) {
       }
       try {
-        if (datalog[count].qindex == 1004) {
+        if (datalog[count].qindex == 4000) {
           fill(128, 0, 0);
+        }
+      }
+      catch (NullPointerException e) {
+      }
+      try {
+        if (datalog[count].qindex == 2001 || datalog[count].qindex == 2002 || datalog[count].qindex == 2003 || datalog[count].qindex == 2004) {
+          fill(colorFood);
+        }
+      }
+      catch (NullPointerException e) {
+      }
+      try {
+        if (datalog[count].qindex == 3002 || datalog[count].qindex == 3003 || datalog[count].qindex == 3001 || datalog[count].qindex == 3004) {
+          fill(colorActivities);
         }
       }
       catch (NullPointerException e) {
       }
 
       strokeWeight(.1);
-      rect(((screenwidth/(h/linebreak))*i), ((screenheight/2)+(y*60)), ((screenwidth/(h/linebreak))-10), 20);
+      rect(((screenwidth/(h/linebreak))*i), ((screenheight/4)+(y*60)), ((screenwidth/(h/linebreak))-10), 20);
       //write the node id number underneath the rectangle
       textSize(10);
       fill(222, 222, 222);
       //rotate(PI/2);
-      text(count, ((screenwidth/(h/linebreak))*i), (((screenheight/2)+(y*60))-5));
+      text(count, ((screenwidth/(h/linebreak))*i), (((screenheight/4)+(y*60))-5));
       count++;
     }
   }
@@ -1347,32 +1594,26 @@ void MapAllNodes() {
 
 
 //when the state is set to 5 to draw an autonomous itinerary
-int DrawAIdata(int a) {
-  int pointcounter = 0;
-  pointcounter = a;
+void DrawAIdata(int a) {
   image(img, 0, 0);
 
   textFont(mono);
   textSize(20);
   fill(240, 240, 240);
   text("Draw Mode 7: Show AI Data", 12, 44);
-
-  textSize(30);
-  fill(55, 55, 55);
-  text("DRAWING ARTIFICIAL INTELLIGENCE DATASET", 12, 650);
-  textSize(15);
-
-  for (int i = 0; i < (datalog.length - 1); i++) {
-    try {
-      text("User Data Session Information " + i + " " + datalog[i].toString(), 12, (100 + (15*i)));
+  textFont(mono);
+  if (printtoscreencounter < datalog.length) {
+    fill(200, 200, 200);
+    for (int i = 0; i < printtoscreencounter; i++) {
+      try {
+        text("Artificial Intelligence Input: User Data Entry: "+datalog[(datalog.length-i-1)].id+"  Question Code "+datalog[(datalog.length-i-1)].qindex+"  Category Data "+datalog[(datalog.length-i-1)].Category, 350, (70 + (17 * i)));
+      } 
+      catch (NullPointerException e) {
+      }
     }
-    catch (NullPointerException e) {
-    }
+    printtoscreencounter++;
+    delay((wait/2)/featurecount);
   }
-
-  pointcounter++;
-  println("pointcounter = " + pointcounter);
-  return(pointcounter);
 }
 
 void PrintToScreen(String s, int x, int y) {
@@ -1386,12 +1627,37 @@ void PrintToScreen(String s, int x, int y) {
   fill(240, 240, 240);
   text("Print Text To Screen", 12, 44);
 
+  textFont(bold);
+
+  textSize(50);
+  text(s.substring(0, printtoscreencounter2), x, y);
+  if (printtoscreencounter2 < s.length()) {
+    printtoscreencounter2++;
+  }
+  //println("printtoscreenscounter = " + printtoscreencounter);
+}
+
+void PrintToScreenLoop(String s, int x, int y) {
+  image(img, 0, 0);
+  fill(200, 200, 200);
+  stroke(200, 200, 200);
+  strokeWeight(1);
+
+  textFont(mono);
+  textSize(20);
+  fill(240, 240, 240);
+  text("Print Text To Screen", 12, 44);
+
+  textFont(bold);
+
   textSize(50);
   text(s.substring(0, printtoscreencounter), x, y);
   if (printtoscreencounter < s.length()) {
     printtoscreencounter++;
+  } else {
+    printtoscreencounter = 0;
+    delay(1000);
   }
-  //println("printtoscreenscounter = " + printtoscreencounter);
 }
 
 //when the state is set to 5 to draw an autonomous itinerary
@@ -1399,6 +1665,46 @@ int DrawAIitinerary(int a) {
   int pointcounter = 0;
   pointcounter = a;
   image(img, 0, 0);
+
+  //int select = int(random(1, AIitineraries.length));
+  int select = AIitineraries.length;
+  select = 10;
+  Itinerary selecteditinerary = AIitineraries[(select - 1)];
+
+  float[] senda = new float[2];
+  try {
+    senda = selecteditinerary.point1;
+    //println(selecteditinerary.point1);
+  }
+  catch (NullPointerException e) {
+  }
+
+  float[] sendb = new float[2];
+  try {
+    sendb = selecteditinerary.point2;
+
+    //println(selecteditinerary.point2);
+  }
+  catch (NullPointerException e) {
+  }
+
+  float[] sendc = new float[2];
+  try {
+    sendc = selecteditinerary.point3;
+    //println(selecteditinerary.point3);
+  }
+  catch (NullPointerException e) {
+  }
+
+  float[] sendd = new float[2];
+  try {
+    sendd = selecteditinerary.point4;
+    //println(selecteditinerary.point4);
+  }
+  catch (NullPointerException e) {
+  }
+
+
 
   textFont(mono);
   textSize(20);
@@ -1410,59 +1716,50 @@ int DrawAIitinerary(int a) {
   text("DRAWING MARKOV MODEL ITINERARIES", 12, 700);
   textSize(20);
 
-  float[] senda = new float[2];
-  //40.979,28.754
-  senda[0] = 40.979;
-  senda[1] = 28.754;
-  float[] sendb = new float[2];
-  //40.955,28.837
-  sendb[0] = 40.955;
-  sendb[1] = 28.837;
-  float[] sendc = new float[2];
-  //41.001,28.979
-  sendc[0] = 41.001;
-  sendc[1] = 28.979;
-  float[] sendd = new float[2];
-  //40.9667,29.032
-  sendd[0] = 40.9667;
-  sendd[1] = 29.032;
-
   int e = 5;
   int s = 255;
 
   PrintToScreen("AI DATASET ITINERARY - MARKOV MODEL .90", 12, 100);
-
-  if (pointcounter > 0) {
-    DrawMapPoint(senda, e, s, s, s, "test1");
+  stroke(colorAI);
+  fill(colorAI);
+  if (printtoscreencounter > 0) {
+    DrawMapPoint(senda, e, colorAI, "Markov Point 1");
     //Draw AI Itinerary1 Text
   } 
-  if (pointcounter > 10) {
-    DrawMapPoint(sendb, e, s, s, s, "test2");
+  if (printtoscreencounter > 50) {
+    DrawMapPoint(sendb, e, colorAI, "Markov Point 2");
     //Draw AI Itinerary2 Text
   } 
-  if (pointcounter > 20) {
-    DrawMapPoint(sendc, e, s, s, s, "test3");
+  if (printtoscreencounter > 100) {
+    DrawMapPoint(sendc, e, colorAI, "Markov Point 3");
     //Draw AI Itinerary3 Text
   } 
-  if (pointcounter > 30) {
-    DrawMapPoint(sendd, e, s, s, s, "test4");
+  if (printtoscreencounter > 150) {
+    DrawMapPoint(sendd, e, colorAI, "Markov Point 4");
     //Draw AI Itinerary4 Text
   } 
-  if (pointcounter > 40) {
+  if (printtoscreencounter > 200) {
     strokeWeight(5);
-    stroke(222, 222, 222);
-    //line(10, 10, 40, 100);
+
     DrawMapLine(senda, sendb, 5);
   } 
-  if (pointcounter > 50) {
+  if (printtoscreencounter > 250) {
     DrawMapLine(sendb, sendc, 5);
   }
-  if (pointcounter > 60) {
+  if (printtoscreencounter > 300) {
     DrawMapLine(sendc, sendd, 5);
   } 
-  pointcounter++;
-  println("pointcounter = " + pointcounter);
-  return(pointcounter);
+  if (printtoscreencounter > 350) {
+    for (int i = 0; i < 10; i++) {
+      color c = color(50, 50, 50);
+      println("i = "+i);
+      //DrawItinerary(AIitineraries[i], c, "AI data");
+      //DrawItinerary(AIitineraries[i]);
+    }
+  } 
+  printtoscreencounter++;
+  println("pointcounter = " + printtoscreencounter);
+  return(printtoscreencounter);
 }
 
 //when the state is set to the visualizing the database, the draw method will call this routine to run
@@ -1475,7 +1772,6 @@ void DatabaseViz() {
   //Itinerary temp = new Itinerary;
   //temp = itineraries.[random(itinerariescount];
   //DrawItinerary(temp, 2, 200);
-
 }
 
 //Most all of this method comes from Jeff Thompson github.com/jeffThompson
@@ -1533,7 +1829,7 @@ void searchforgoogleimages(float x, float y, String s) {
       loc[1] = y;
       loc[0] = x;
 
-      PlaceImage(loc, webImg, "Image Information");
+      PlaceImage(loc, webImg, s);
     }
   }
 }
@@ -1595,7 +1891,7 @@ void searchCCforgoogleimages(float x, float y, String s) {
       loc[1] = y;
       loc[0] = x;
 
-      PlaceCCImage(loc, webImg, "Image Information");
+      PlaceCCImage(loc, webImg, s);
     }
   }
 }
@@ -1693,17 +1989,33 @@ class Itinerary
     point3 = c;
     point4 = d;
     id = e;
-    //println("itinerary object created");
-    //println("point1 = "+ point1[0] + " " + point1[1]);
-    //println("point2 = "+ point2[0] + " " + point2[1]);
-    //println("point3 = "+ point3[0] + " " + point3[1]);
-    //println("point4 = "+ point4[0] + " " + point4[1]);
   }
 
   public String toString ()
   {
     //return String.format("id: %i, question: %s answer: %s", id, question, answer);
     String r = "point1 lat: " + str(point1[0]) + " " + "point1 lon: " + str(point1[1]);
+    return r;
+  }
+}
+
+//Object to store an itinerary
+class Feature
+{
+  public float lat;
+  public float lon;
+  public String name;
+
+  Feature(String featureName, Float featureLat, Float featureLon) {
+    name = featureName;
+    lat = featureLat;
+    lon = featureLon;
+  }
+
+  public String toString ()
+  {
+    //return String.format("id: %i, question: %s answer: %s", id, question, answer);
+    String r = "name " + name + " " + "lat " + lat+ " " + "lon " + lon;
     return r;
   }
 }
