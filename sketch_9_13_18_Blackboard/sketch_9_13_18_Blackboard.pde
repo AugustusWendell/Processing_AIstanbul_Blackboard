@@ -8,10 +8,13 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.io.InputStreamReader;     // used to get our raw HTML source   
 
-import de.bezier.data.sql.*;
+import de.bezier.data.sql.*;          // used to connect to MYSQL
 
 //master Array holding all user data
 UserSession[] datalog;
+
+WishboxFeature[] wishlog;
+LostBuildingFeature[] lostbuildinglog;
 
 AISession[] ailog;
 
@@ -47,12 +50,21 @@ int AIsessioncount = 500;
 int itinerariescount = 0;
 int AIitinerariescount = 0;
 int featurecount = 0;
+int wishboxcount = 0;
+int nostalgiacount = 0;
+int lostbuildingcount = 0;
+int lastdatacount = 0;
+
+int firsttextlineheight = 60;
+int secondtextlineheight = 100;
+
+int upperscreentextsize = 30;
 
 States state = States.STATE_1;
 
 int time;
 //time between state changes
-int wait = 15000;
+int wait = 20000;
 
 //map image holder
 PImage img;
@@ -88,7 +100,6 @@ float CCbottomedge = 40.95231;
 float CCtopedge = 41.06623;
 
 void setup() {
-  //full screen toggle
   //fullScreen();
   size(1920, 1080);
   background(0);
@@ -118,6 +129,8 @@ void setup() {
   itineraries = new Itinerary[5000];
   AIitineraries = new Itinerary[5000];
   features = new Feature[5000];
+  wishlog = new WishboxFeature[5000];
+  lostbuildinglog = new LostBuildingFeature[5000];
   DownloadDB(); //goes to the GoDaddy database and pulls all the data down, writes json files locally.
   DownloadAIDB();
   ImportData(); //imports the json files from the local drive
@@ -125,388 +138,75 @@ void setup() {
   ImportItineraries();
   ImportAIItineraries();
   FindFeatureNames();
-  //PrintFeaturesDebug();
-}
-
-void DownloadDB() {
-
-  //println("DownloadDB Method Called");
-
-  //db = new MySQL( this, "107.180.41.145", "IstanbulQuestions", "aistanbul", "=OFA*qUuAU3Y" );  // open database file
-  db = new MySQL( this, "107.180.41.145", "IstanbulQuestions", "augustuswendell", "@Rtist999" );  // open database file
-
-  db.setDebug(true);
-
-  if ( db.connect() )
-  {
-
-    String[] tableNames = db.getTableNames();
-    //println(tableNames); //only 1 TableName = Answers
-    //move into Answers
-    db.query( "SELECT * FROM %s", tableNames[0] );
-    //select all columns from Answers?       
-    String[] columnNames;
-    columnNames = db.getColumnNames();
-    //println(columnNames);
-
-    //println("db insertion called");
-    db.query("SELECT * FROM Answers");
-    //db.next();
-    int r = 0;
-
-    while (db.next())
-    {
-      //columnNames = db.getColumnNames();
-      //println(columnNames);
-      int y = 0;
-      y = db.getInt("id");
-      int x = 0;
-      x = db.getInt("Qid");
-      int z = 0;
-      z = db.getInt("Timestamp");
-      String b = db.getString("Question");
-      String c = db.getString("Category");
-      String d = db.getString("Type");
-      String e = db.getString("FeatureType");
-      String f = db.getString("FeatureName");
-      String g = db.getString("Lat");
-      String h = db.getString("Lng");
-      String i = db.getString("Response");
-      //println( y + " " + x +  " " + z + " " + b +  " " + c +  " " + d +  " " + e +  " " + f +  " " + g +  " " + h +  " " + i );
-
-      //make a new object and put the data into it
-      datalog[r] = new UserSession(y, x, z, b, c, d, e, f, g, h, i);
-
-      //write datalog[r] to a local JSON file
-      //Processing.data.JSONObject
-      JSONObject json = new JSONObject();
-
-      //json = new JSONObject();
-
-      json.setInt("id", y);
-      json.setInt("qindex", x);
-      json.setInt("datetime", z);
-      json.setString("question", b);
-      json.setString("Category", c);
-      json.setString("Type", d);
-      json.setString("FeatureType", e);
-      json.setString("FeatureName", f);
-      json.setString("Lat", g);
-      json.setString("Lon", h);
-      json.setString("answer", i);
-
-      //saveJSONObject(json, "data/AIstanbul_id_"+y+".json");
-      saveJSONObject(json, "data/AIstanbul_id_"+r+".json");
-
-      usersessioncount = r;
-      //println("useresessioncount = " + usersessioncount);
-
-      //increment counter
-      r++;
-    }
-  }
-}
-
-
-void DownloadAIDB() {
-
-  db2 = new MySQL( this, "107.180.41.145", "IstanbulAIOutput", "augustuswendell", "@Rtist999" );  // open database file
-  AIitinerariescount = 0;
-
-  db2.setDebug(true);
-
-  if ( db2.connect() )
-  {
-
-    String[] tableNames = db2.getTableNames();
-    db2.query( "SELECT * FROM %s", tableNames[0] );      
-    String[] columnNames;
-    columnNames = db2.getColumnNames();
-    //println(columnNames);
-
-    db2.query("SELECT * FROM Output");
-    int r = 0;
-
-
-    while (db2.next())
-    {
-      //columnNames = db.getColumnNames();
-      //println(columnNames);
-      int id = db2.getInt("id");
-      float lat1 = db2.getFloat("lat1");
-      float lon1 = db2.getFloat("lon1");
-      float lat2 = db2.getFloat("lat2");
-      float lon2 = db2.getFloat("lon2");
-      float lat3 = db2.getFloat("lat3");
-      float lon3 = db2.getFloat("lon3");
-      float lat4 = db2.getFloat("lat4");
-      float lon4 = db2.getFloat("lon4");
-
-      //make a new object and put the data into it
-      ailog[r] = new AISession(id, lat1, lon1, lat2, lon2, lat3, lon3, lat4, lon4);
-
-      //write datalog[r] to a local JSON file
-      //Processing.data.JSONObject
-      JSONObject json = new JSONObject();
-
-      json.setInt("id", id);
-      json.setFloat("lat1", lat1);
-      json.setFloat("lon1", lon1);
-      json.setFloat("lat2", lat2);
-      json.setFloat("lon2", lon2);
-      json.setFloat("lat3", lat3);
-      json.setFloat("lon3", lon3);
-      json.setFloat("lat4", lat4);
-      json.setFloat("lon4", lon4);
-
-
-      saveJSONObject(json, "data/AIstanbul_AI_id_"+r+".json");
-
-
-      //write datalog[r] to a local JSON file
-      //Processing.data.JSONObject
-      JSONObject json2 = new JSONObject();
-
-      json2.setFloat("lat1", lat1);
-      json2.setFloat("lon1", lon1);
-      json2.setFloat("lat2", lat2);
-      json2.setFloat("lon2", lon2);
-      json2.setFloat("lat3", lat3);
-      json2.setFloat("lon3", lon3);
-      json2.setFloat("lat4", lat4);
-      json2.setFloat("lon4", lon4);
-
-      saveJSONObject(json2, "data/AIstanbul_AI_itinerary_"+r+".json");
-      //println("saved json itinerary");
-      AIitinerariescount = r;
-
-      AIsessioncount = r;
-
-      //increment counter
-      r++;
-    }
-  }
-}
-
-//find same user lat and lon pairs in the datalog
-void FindItineraries() {
-  float[] temp = new float[2];
-  float[] temp1 = new float[2];
-  float[] temp2 = new float[2];
-  float[] temp3 = new float[2];
-  int r = 0;
-
-  for (int i = 1; i < usersessioncount; i++) {
-    if (datalog[i].qindex == 1000) {
-      temp[0] = float(datalog[i].Lat);
-      temp[1] = float(datalog[i].Lon);
-      //println("building itinerary point 1");
-    } else {
-      if (datalog[i].qindex == 1002) {
-        temp1[0] = float(datalog[i].Lat);
-        temp1[1] = float(datalog[i].Lon);
-        //println("building itinerary point 2");
-      } else {
-        if (datalog[i].qindex == 2001) {
-          temp2[0] = float(datalog[i].Lat);
-          temp2[1] = float(datalog[i].Lon);
-          //println("building itinerary point 3");
-        } else {
-          if (datalog[i].qindex == 2007) {
-            temp3[0] = float(datalog[i].Lat);
-            temp3[1] = float(datalog[i].Lon);
-            //println("building itinerary point 4");
-
-            //write datalog[r] to a local JSON file
-            //Processing.data.JSONObject
-            JSONObject json = new JSONObject();
-
-            json.setFloat("lat1", temp[0]);
-            json.setFloat("lon1", temp[1]);
-            json.setFloat("lat2", temp1[0]);
-            json.setFloat("lon2", temp1[1]);
-            json.setFloat("lat3", temp2[0]);
-            json.setFloat("lon3", temp2[1]);
-            json.setFloat("lat4", temp3[0]);
-            json.setFloat("lon4", temp3[1]);
-
-            saveJSONObject(json, "data/AIstanbul_itinerary_"+r+".json");
-            //println("saved json itinerary");
-            itinerariescount = r;
-
-            r++;
-            //println("intinerary counter = "+r);
-          }
-        }
-      }
-    }
-  }
-  for (int i = 0; i < itineraries.length; i++) {
-    try {
-      //println("itineraries " + i );
-      //println(itineraries[i].toString());
-    }
-    catch (NullPointerException e) {
-    }
-  }
-}
-
-void ImportItineraries() {
-
-  JSONObject json = new JSONObject();
-  for (int i = 1; i < itinerariescount; i++) {
-
-    json = loadJSONObject("data/AIstanbul_itinerary_"+i+".json");
-
-    float lat1 = json.getFloat("lat1");
-    float lon1 = json.getFloat("lon1");
-    float lat2 = json.getFloat("lat2");
-    float lon2 = json.getFloat("lon2");
-    float lat3 = json.getFloat("lat3");
-    float lon3 = json.getFloat("lon3");
-    float lat4 = json.getFloat("lat4");
-    float lon4 = json.getFloat("lon4");
-
-    float[] temp1 = new float[2];
-    temp1[0] = lat1;
-    temp1[1] = lon1;
-    float[] temp2 = new float[2];
-    temp2[0] = lat2;
-    temp2[1] = lon2;
-    float[] temp3 = new float[2];
-    temp3[0] = lat3;
-    temp3[1] = lon3;
-    float[] temp4 = new float[2];
-    temp4[0] = lat4;
-    temp4[1] = lon4;
-
-    itineraries[i] = new Itinerary(temp1, temp2, temp3, temp4, 1);
-  }
-}
-
-
-void ImportAIItineraries() {
-
-  JSONObject json = new JSONObject();
-  for (int i = 1; i < AIitinerariescount; i++) {
-
-    json = loadJSONObject("data/AIstanbul_AI_itinerary_"+i+".json");
-
-    float lat1 = json.getFloat("lat1");
-    float lon1 = json.getFloat("lon1");
-    float lat2 = json.getFloat("lat2");
-    float lon2 = json.getFloat("lon2");
-    float lat3 = json.getFloat("lat3");
-    float lon3 = json.getFloat("lon3");
-    float lat4 = json.getFloat("lat4");
-    float lon4 = json.getFloat("lon4");
-
-    float[] temp1 = new float[2];
-    temp1[0] = lat1;
-    temp1[1] = lon1;
-    float[] temp2 = new float[2];
-    temp2[0] = lat2;
-    temp2[1] = lon2;
-    float[] temp3 = new float[2];
-    temp3[0] = lat3;
-    temp3[1] = lon3;
-    float[] temp4 = new float[2];
-    temp4[0] = lat4;
-    temp4[1] = lon4;
-
-    AIitineraries[i] = new Itinerary(temp1, temp2, temp3, temp4, 1);
-  }
-}
-
-void ImportData() {
-
-  datalog = new UserSession[usersessioncount];
-  //println("updated size of datalog to " + usersessioncount);
-
-  //write datalog[r] to a local JSON file
-  //Processing.data.JSONObject
-  JSONObject json = new JSONObject();
-  for (int i = 1; i < usersessioncount; i++) {
-
-    json = loadJSONObject("data/AIstanbul_id_"+i+".json");
-
-    int id = json.getInt("id");
-    int qindex = json.getInt("qindex");
-    int datetime = json.getInt("datetime");
-    String question = json.getString("question");
-    String Category = json.getString("Category");
-    String Type = json.getString("Type");
-    String FeatureType = json.getString("FeatureType");
-    String FeatureName = json.getString("FeatureName");
-    String Lat = json.getString("Lat");
-    String Lon = json.getString("Lon");
-    String answer = json.getString("answer");
-
-    datalog[i] = new UserSession(id, qindex, datetime, question, Category, Type, FeatureType, FeatureName, Lat, Lon, answer);
-  }
+  FindWishbox();
+  ImportWishBox();
+  FindLostBuilding();
+  ImportLostBuilding();
 }
 
 void draw() {
 
   switch (state) {
-  case STATE_1 : //  1 Boot Mode
+  case STATE_1 :
     ScreenInitialize();
-    //ListRecentDataPoints();
     break;
-  case STATE_2: // 2 List of all or recent data points - makes clear that there are users, Last few at the top of the screen. 1 per user
-    //ListFeatures();
+  case STATE_2:
     DrawInitialize();
     break;
-  case STATE_3: //3 Same Data as Points on the screen: Color Coded, could be a few modes in here…….Home, Food, Activities, Work
+  case STATE_3:
+    DrawLastUserData();
+    break;
+  case STATE_4:
+    DrawLastUserDataItinerary();
+    break;
+  case STATE_5:
     ListRecentDataPoints();
     break;
-  case STATE_4: //4 Draw connections between them, to visually build itineraries - colored by user
-    DrawIDs(); //State 4 shows all ID location
-    break;
-  case STATE_5: //5 Isolate one itinerary and place images along it
-    DrawCCIDs(); //State 4 shows all ID locations
-    break;
-  case STATE_6: //6 AI Boot Screen?
-    DrawNostalgiaIDs();
-    //DrawWishbox();
+  case STATE_6:
+    DrawIDs(); 
     break;
   case STATE_7: //7 AI writes out data points as text
-    DrawItineraries();
-    //AIitineraryCounter = DrawAIitinerary(AIitineraryCounter);
+    DrawCCIDs();
     break;
-  case STATE_8: //8 AI draws as dots  
+  case STATE_8: //8 AI draws as dots
+    DrawItineraries();  
+    break;
+  case STATE_9:
+    //DrawNostalgiaIDs();
     DrawCCItineraries();
-    //DatabaseViz();
     break;
-  case STATE_9: //9 AI Connects with lines to build itinerary
+  case STATE_10:
     PlaceImageFeatureName(3);
     break;
-  case STATE_10: //10 AI reports textually on the itinerary and what it has learned
-    PlaceCCImageFeatureName(5);
-    break;
   case STATE_11:
-    DrawAIInitialize();
+    ReportLostBuilding();
+    //DatabaseViz();
     break;
   case STATE_12:
-    DrawAIdata(1);
+    DrawWishbox();
+    //PlaceImageFeatureName(3);
     break;
   case STATE_13:
-    //AI_Text_Itinerary();
-    DrawAIitinerary(2000);
+    PlaceCCImageFeatureName(5);
     break;
   case STATE_14:
-
-    DrawAIItineraries();
+    DrawAIInitialize();
     break;
   case STATE_15:
-    DrawAICCItineraries();
+    DrawAIdata(1);
     break;
   case STATE_16:
+    DrawAIitinerary(2000);
+    break;
+  case STATE_17:
+    DrawAIItineraries();
+    break;
+  case STATE_18:
+    DrawAICCItineraries();
+    break;
+  case STATE_19:
     GridData();
     break;
-    //case STATE_17: 
-    //MapAllNodes();
-    //break;
   }
 
 
@@ -519,10 +219,10 @@ void draw() {
 
   //draw watermark
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(188, 188, 188);
-  text("[AI]stanbul Blackboard Application 0.95      "+state+"          " +m+ "_" +d+ "  "+h+"hours "+min+"minutes "+s+"seconds", 12, 22);
-  text("Draw timing: " + millis() + " milliseconds", 1500, 22);
+  text("[AI]stanbul Blackboard Application 1.00      "+state+"          " +m+ "_" +d+ "  "+h+"hours "+min+"minutes "+s+"seconds", 12, 25);
+  text("Draw timing: " + millis() + " milliseconds", 1400, 25);
 
   //check the difference between now and the previously stored time is greater than the wait interval
   if (millis() - time >= wait) {
@@ -537,7 +237,7 @@ void draw() {
 
     ResetVars();
 
-    textSize(30);
+    textSize(upperscreentextsize);
     fill(120, 120, 120);
     text("[AI]istanbul Refresh - Loading New Drawing Mode", 12, 120);
     text("[AI]istanbul Refresh - Yeni Çizim Modu Yükleniyor", 12, 160);
@@ -590,49 +290,27 @@ void draw() {
                                   state = States.STATE_16;
                                 } else
                                   if (state == States.STATE_16) {
-                                    state = States.STATE_1;
-                                  }
+                                    state = States.STATE_17;
+                                  } else
+                                    if (state == States.STATE_17) {
+                                      state = States.STATE_18;
+                                    } else
+                                      if (state == States.STATE_18) {
+                                        state = States.STATE_19;
+                                      } else
+                                        if (state == States.STATE_19) {
+                                          state = States.STATE_1;
+                                        }
   }
 }
 
-public int getState() {
-  switch (state) {
-  case STATE_1: 
-    return 1;
-  case STATE_2: 
-    return 2;
-  case STATE_3: 
-    return 3;
-  case STATE_4: 
-    return 4;
-  case STATE_5: 
-    return 5;
-  case STATE_6: 
-    return 6;
-  case STATE_7: 
-    return 7;
-  case STATE_8: 
-    return 8;
-  case STATE_9: 
-    return 9;
-  case STATE_10: 
-    return 10;
-  case STATE_11: 
-    return 11;
-  case STATE_12: 
-    return 12;
-  case STATE_13: 
-    return 13;
-  }
-  return 0;
-}
+
 void AI_Text_Itinerary() {
   image(imgCC, 0, 0);
-
   stroke(200, 200, 200);
   strokeWeight(1);
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
   text("Draw Mode: Report AI itinerary", 12, 500);
 }
@@ -641,9 +319,9 @@ void ScreenInitialize() {
   stroke(200, 200, 200);
   strokeWeight(1);
   textFont(bold);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Contacting [AI]stanbul database", 12, 44);
+  text("Contacting [AI]stanbul database", 12, firsttextlineheight);
   String a = "Contacting [AI]stanbul database_____";
   PrintToScreenLoop(a, 12, 500);
 }
@@ -654,17 +332,29 @@ void DrawItineraries() {
   stroke(200, 200, 200);
   strokeWeight(1);
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Güzergahlar Çiziliyor", 12, 44);
-  text("Draw Mode: User Itineraries", 12, 64);
+  text("Güzergahlar Çiziliyor", 12, firsttextlineheight);
+  text("Draw Mode: User Itineraries", 12, secondtextlineheight);
   color c;
   c = color(255, 255, 255);
+
+  //println("drawing itineraries " + "   itineraries count = " + itineraries.length);
+  //println(itinerariescount);
 
   for (int i = 0; i < printtoscreencounter; i++) {
     //for(int i = 0; i < itineraries.length; i++){
     try {
-      DrawItinerary(itineraries[i], c, "User Itinerary Point");
+      if (i == (itinerariescount-1)) {
+        color c1;
+        c1 = color(255, 0, 0);
+        DrawItinerary(itineraries[i], c1, "User Itinerary Point");
+        //println("draw last itinerary red");
+      } else {
+        DrawItinerary(itineraries[i], c, "User Itinerary Point");
+        //println("draw " + i);
+      }
+      //DrawItinerary(itineraries[i], c, "User Itinerary Point");
       //println("draw itinerary " + i);
     }
     catch (NullPointerException e) {
@@ -675,16 +365,75 @@ void DrawItineraries() {
   delay((wait/2)/itinerariescount);
 }
 
+void DrawLastUserData() {
+  image(img, 0, 0);
+
+  stroke(200, 200, 200);
+  strokeWeight(1);
+  textFont(mono);
+  textSize(upperscreentextsize);
+  fill(240, 240, 240);
+  text(" ", 12, firsttextlineheight);
+  text("Draw Mode: Last User Input", 12, secondtextlineheight);
+
+  //document the last user interaction
+  int userid = GetUserId(usersessioncount);
+  //println("user session ID = " + userid);
+  lastdatacount = 0;
+  for (int i = (usersessioncount -1); i > (usersessioncount - 10); i--) {
+    if (datalog[i].id != userid) {
+      break;
+    } else {
+      String report = datalog[i].toString();
+      textSize(50);
+      text(report, 12, (200 + (lastdatacount * 40)));
+      lastdatacount++;
+      delay(500);
+      //println("in usersessioncount " + report);
+    }
+  }
+}
+
+//returns the unique UserId based on a single questions id
+int GetUserId(int input) {
+  int methodinput = input;
+  int returnvalue = datalog[(input-1)].id;
+  return(returnvalue);
+}
+
+
+void  DrawLastUserDataItinerary() {
+  //draw the last user data itinerary
+  image(img, 0, 0);
+
+  stroke(200, 200, 200);
+  strokeWeight(1);
+  textFont(mono);
+  textSize(upperscreentextsize);
+  fill(240, 240, 240);
+  //text("Güzergahlar Çiziliyor", 12, firsttextlineheight);
+  text("Draw Mode: Last Complete User Itinerary", 12, secondtextlineheight);
+  color c;
+  c = color(255, 0, 0);
+
+  try {
+    DrawItinerary(itineraries[(itinerariescount - 1)], c, "Last User Itinerary Point");
+    println("draw last user itinerary");
+  }
+  catch (NullPointerException e) {
+  }
+}
+
 void DrawAIItineraries() {
   image(img, 0, 0);
 
   stroke(200, 200, 200);
   strokeWeight(1);
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Güzergahlar Çiziliyor", 12, 44);
-  text("Draw Mode: Artificial Intelligence Itineraries", 12, 64);
+  text("Güzergahlar Çiziliyor", 12, firsttextlineheight);
+  text("Draw Mode: Artificial Intelligence Itineraries", 12, secondtextlineheight);
 
   for (int i = 0; i < printtoscreencounter; i++) {
     //for(int i = 0; i < itineraries.length; i++){
@@ -705,16 +454,21 @@ void DrawCCItineraries() {
   stroke(200, 200, 200);
   strokeWeight(1);
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Draw Mode: User Itineraries, City Center", 12, 44);
+  text("Draw Mode: User Itineraries, City Center", 12, secondtextlineheight);
 
   for (int i = 0; i < printtoscreencounter; i++) {
     //for(int i = 0; i < itineraries.length; i++){
     try {
-      DrawCCItinerary(itineraries[i], 1, 5, ((255/itinerariescount) * i), str(i));
-      //DrawCCItinerary(itineraries[i]);
-      //println("draw itinerary " + i);
+      if (i == itinerariescount) {
+        color c1;
+        c1 = color(255, 0, 0);
+        //DrawCCItinerary(itineraries[i], c1, str(i));
+      } else {
+        DrawCCItinerary(itineraries[i], 1, 5, ((255/itinerariescount) * i), str(i));
+      }
+      //DrawCCItinerary(itineraries[i], 1, 5, ((255/itinerariescount) * i), str(i));
     }
     catch (NullPointerException e) {
     }
@@ -730,9 +484,9 @@ void DrawAICCItineraries() {
   stroke(200, 200, 200);
   strokeWeight(1);
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Draw Mode: Artificial Intelligence Itineraries, City Center", 12, 44);
+  text("Draw Mode: Artificial Intelligence Itineraries, City Center", 12, secondtextlineheight);
 
   for (int i = 0; i < printtoscreencounter; i++) {
     //for(int i = 0; i < itineraries.length; i++){
@@ -790,9 +544,9 @@ void WriteItinerary() {
   stroke(200, 200, 200);
   strokeWeight(1);
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Draw Mode 1: Itinerary", 12, 44);
+  text("Draw Mode 1: Itinerary", 12, 50);
 
 
   //create new query to get data from the database to populate the mad lib itinerary
@@ -813,137 +567,7 @@ void WriteItinerary() {
 }
 
 
-int[] ConvertCoords() {
-  //convert lat and long to pixel values 
-  //dummy method not used
-  int[] ret = new int[2];
-  ret[1] = 30;
-  ret[2] = 45;
-  return ret;
-}
 
-//lat/long,  lat/long,  lat/long,  lat/long,  size, color(single value)
-void DrawItinerary(float[] a, float[] b, float[] c, float[] d, int e, int s) {
-  DrawMapPoint(a, e, s, s, s, "test1");
-  //delay(100);
-  DrawMapPoint(b, e, s, s, s, "test2");
-  //delay(100);
-  DrawMapPoint(c, e, s, s, s, "test3");
-  //delay(100);
-  DrawMapPoint(d, e, s, s, s, "test4");
-  //delay(100);
-  DrawMapLine(a, b, e);
-  //delay(100);
-  DrawMapLine(b, c, e);
-  //delay(100);
-  DrawMapLine(c, d, e);
-}
-
-void DrawItinerary(Itinerary i) {
-  DrawMapPoint(i.point1, 5, 255, 255, 255, "test1");
-  //println("itinerary MapPoint " + i.point1[0] + " " + i.point1[1]);
-  //delay(100);
-  DrawMapPoint(i.point2, 5, 255, 255, 255, "test2");
-  //delay(100);
-  DrawMapPoint(i.point3, 5, 255, 255, 255, "test3");
-  //delay(100);
-  DrawMapPoint(i.point4, 5, 255, 255, 255, "test4");
-  //delay(100);
-  DrawMapLine(i.point1, i.point2, 5);
-  //delay(100);
-  DrawMapLine(i.point2, i.point3, 5);
-  //delay(100);
-  DrawMapLine(i.point3, i.point4, 5);
-}
-
-void DrawItinerary(Itinerary i, color c, String s) {
-  DrawMapPoint(i.point1, 5, c, s);
-  DrawMapPoint(i.point2, 5, c, s);
-  //delay(100);
-  DrawMapPoint(i.point3, 5, c, s);
-  //delay(100);
-  DrawMapPoint(i.point4, 5, c, s);
-  //delay(100);
-  DrawMapLine(i.point1, i.point2, 5);
-  //delay(100);
-  DrawMapLine(i.point2, i.point3, 5);
-  //delay(100);
-  DrawMapLine(i.point3, i.point4, 5);
-}
-
-void DrawCCItinerary(Itinerary i) {
-  DrawCCMapPoint(i.point1, 5, 255, 255, 255, "test1");
-  //println("itinerary MapPoint " + i.point1[0] + " " + i.point1[1]);
-  //delay(100);
-  DrawCCMapPoint(i.point2, 5, 255, 255, 255, "test2");
-  //delay(100);
-  DrawCCMapPoint(i.point3, 5, 255, 255, 255, "test3");
-  //delay(100);
-  DrawCCMapPoint(i.point4, 5, 255, 255, 255, "test4");
-  //delay(100);
-  DrawCCMapLine(i.point1, i.point2, 5);
-  //delay(100);
-  DrawCCMapLine(i.point2, i.point3, 5);
-  //delay(100);
-  DrawCCMapLine(i.point3, i.point4, 5);
-}
-
-void DrawCCItinerary(Itinerary i, int w, int s, int c, String o) {
-  DrawCCMapPoint(i.point1, s, c, c, c, o);
-  DrawCCMapPoint(i.point2, s, c, c, c, o);
-  DrawCCMapPoint(i.point3, s, c, c, c, o);
-  DrawCCMapPoint(i.point4, s, c, c, c, o);
-  DrawCCMapLine(i.point1, i.point2, w);
-  DrawCCMapLine(i.point2, i.point3, w);
-  DrawCCMapLine(i.point3, i.point4, w);
-}
-
-//lat/long,  lat/long,  lat/long,  lat/long,  size, color(single value)
-void DrawCCItinerary(float[] a, float[] b, float[] c, float[] d, int e, int s) {
-  DrawCCMapPoint(a, e, s, s, s, "test1");
-  //delay(100);
-  DrawCCMapPoint(b, e, s, s, s, "test2");
-  //delay(100);
-  DrawCCMapPoint(c, e, s, s, s, "test3");
-  //delay(100);
-  DrawCCMapPoint(d, e, s, s, s, "test4");
-  //delay(100);
-  DrawCCMapLine(a, b, e);
-  //delay(100);
-  DrawCCMapLine(b, c, e);
-  //delay(100);
-  DrawCCMapLine(c, d, e);
-}
-
-void DrawMapLine(float[] a, float[] b, int weight) {
-  //using convert methods to simplify the code
-  float drawlat1 = ConvertLat(a[0]);
-  float drawlong1 = ConvertLong(a[1]);
-
-  //using convert methods to simplify the code
-  float drawlat2 = ConvertLat(b[0]);
-  float drawlong2 = ConvertLong(b[1]);
-
-  fill(200, 200, 200);
-  stroke(200, 200, 200);
-  strokeWeight(2);
-  line(drawlong1, drawlat1, drawlong2, drawlat2);
-}
-
-void DrawCCMapLine(float[] a, float[] b, int weight) {
-  //using convert methods to simplify the code
-  float drawlat1 = ConvertCCLat(a[0]);
-  float drawlong1 = ConvertCCLong(a[1]);
-
-  //using convert methods to simplify the code
-  float drawlat2 = ConvertCCLat(b[0]);
-  float drawlong2 = ConvertCCLong(b[1]);
-
-  fill(200, 200, 200);
-  stroke(200, 200, 200);
-  strokeWeight(2);
-  line(drawlong1, drawlat1, drawlong2, drawlat2);
-}
 
 
 //float[lat, long], image to be displayed, String info
@@ -986,143 +610,16 @@ void PlaceCCImage(float[] a, PImage b, String c) {
   text(c, (drawlong - 20), (drawlat - 20));
 }
 
-float ConvertLat(float a) {
-  //convert map coordinates to screen coordinates
 
-  float bottomtotop = topedge - bottomedge; //.398
-  float inputlat = a; //for instance 41.0    Y VALUE!!!
-
-  float drawlat = ((topedge - inputlat)/bottomtotop) * screenheight; //Y VALUE FOR DRAWING 8/29/18 fix
-
-  return(drawlat);
-}
-
-float ConvertCCLat(float a) {
-  //convert map coordinates to screen coordinates
-
-  float bottomtotop = CCtopedge - CCbottomedge;  //.11392
-  float inputlat = a;                            
-  //println("inputlat = " + inputlat); 
-
-  float drawlat = ((CCtopedge - inputlat)/bottomtotop) * screenheight; //Y VALUE FOR DRAWING 8/29/18 fix   41.06623- 
-  //println("drawlat = " + drawlat);
-
-  return(drawlat);
-}
-
-float ConvertLong(float a) {
-  //convert map coordinates to screen coordinates
-
-  float lefttoright = rightedge - leftedge; 
-  float inputlong = a; 
-
-  float drawlong = ((rightedge - inputlong)/lefttoright) * screenwidth;  //X VALUE FOR DRAWING 8/29/18 fix
-  drawlong = screenwidth - drawlong;
-
-  return(drawlong);
-}
-
-float ConvertCCLong(float a) {
-  //convert map coordinates to screen coordinates
-
-  float lefttoright = CCrightedge - CCleftedge; 
-  float inputlong = a; 
-  //println("inputlong = " + inputlong);
-
-  float drawlong = ((CCrightedge - inputlong)/lefttoright) * screenwidth;
-  drawlong = screenwidth - drawlong;
-  //println("drawlong = " + drawlong);
-
-  return(drawlong);
-}
-
-
-//lat/long, weight, color, color, color, description
-void DrawMapPoint(float[] a, int e, int c1, int c2, int c3, String description) {
-  fill(200, 200, 200);
-  stroke(200, 200, 200);
-  strokeWeight(1);
-  textFont(mono);
-  //using convert methods to simplify the code
-  float drawlat = ConvertLat(a[0]);
-  //println("Draw Lat = " + drawlat);
-  float drawlong = ConvertLong(a[1]);
-  //println("Draw Long = " + drawlong);
-
-  fill(c1, c2, c3);
-  ellipse(drawlong, drawlat, e, e);
-  textSize(10);
-  fill(200, 200, 200);
-  text(description, (drawlong + e), (drawlat + e));
-}
-
-//lat/long, weight, color, color, color, description
-void DrawMapPoint(float[] a, int e, color c, String description) {
-  fill(200, 200, 200);
-  stroke(200, 200, 200);
-  strokeWeight(1);
-  textFont(mono);
-  //using convert methods to simplify the code
-  float drawlat = ConvertLat(a[0]);
-  //println("Draw Lat = " + drawlat);
-  float drawlong = ConvertLong(a[1]);
-  //println("Draw Long = " + drawlong);
-
-  fill(c);
-  ellipse(drawlong, drawlat, e, e);
-  textSize(10);
-  fill(200, 200, 200);
-  text(description, (drawlong + e), (drawlat + e));
-}
-
-//lat/long, weight, color, color, color, description
-void DrawCCMapPoint(float[] a, int e, int c1, int c2, int c3, String description) {
-  fill(200, 200, 200);
-  stroke(200, 200, 200);
-  strokeWeight(1);
-  textFont(mono);
-  float drawlat = ConvertCCLat(a[0]);
-  //println("CC Draw Lat = " + drawlat);
-  float drawlong = ConvertCCLong(a[1]);
-  //println("CC Draw Long = " + drawlong);
-
-  fill(c1, c2, c3);
-  //ellipse(drawlat, drawlong, e, e);
-  ellipse(drawlong, drawlat, e, e);
-  textSize(10);
-  fill(200, 200, 200);
-  //text(description + drawlong + drawlat, (drawlong + e), (drawlat + e));
-  text(description, (drawlong + e), (drawlat + e));
-}
-
-//lat/long, weight, color, color, color, description
-void DrawCCMapPoint(float[] a, int e, color c, String description) {
-  fill(200, 200, 200);
-  stroke(200, 200, 200);
-  strokeWeight(1);
-  textFont(mono);
-  float drawlat = ConvertCCLat(a[0]);
-  //println("CC Draw Lat = " + drawlat);
-  float drawlong = ConvertCCLong(a[1]);
-  //println("CC Draw Long = " + drawlong);
-
-  fill(c);
-  //ellipse(drawlat, drawlong, e, e);
-  ellipse(drawlong, drawlat, e, e);
-  textSize(10);
-  fill(200, 200, 200);
-  //text(description + drawlong + drawlat, (drawlong + e), (drawlat + e));
-  text(description, (drawlong + e), (drawlat + e));
-}
 
 void  ListRecentDataPoints() {
   image(img, 0, 0);
   stroke(200, 200, 200);
   strokeWeight(1);
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Draw Mode: List Recent Data", 12, 44);
+  text("Draw Mode: List Recent Data", 12, 60);
   fill(200, 200, 200);
 
   /*
@@ -1142,7 +639,7 @@ void  ListRecentDataPoints() {
     fill(200, 200, 200);
     for (int i = 0; i < printtoscreencounter; i++) {
       try {
-        text("Feature Input Found. Feature Name: "+features[(featurecount - i)].name, 200, (70 + (17 * i)));
+        text("Feature Input Found. Feature Name: "+features[(featurecount - i)].name, 200, (100 + (20 * i)));
       } 
       catch (NullPointerException e) {
       }
@@ -1174,9 +671,9 @@ void DrawIDs() {
   fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
-  textSize(20);
+  textSize(upperscreentextsize);
   textFont(mono);
-  text("Draw Mode 4: Show All DataPoints", 12, 44);
+  text("Draw Mode 4: Show All DataPoints", 12, 60);
 
 
   textFont(bold);
@@ -1191,7 +688,7 @@ void DrawIDs() {
   text("Etkinlikler / Activities", 12, 500);
 
   textFont(mono);
-  //for(int i = 0; i < datalog.length; i++){
+  
   for (int i = 0; i < printtoscreencounter; i++) {
     try {
       float[] temp = new float[2];
@@ -1230,18 +727,14 @@ void DrawIDs() {
   }
 }
 
-
-
-
-
 //when the state is set to show the IDs, the draw method will call this routine to run
 void DrawNostalgiaIDs() {
   image(img, 0, 0);
 
   textFont(mono);
   fill(200, 200, 200);
-  textSize(20);
-  text("Draw Mode 4: Show All DataPoints: Nostalgia", 12, 44);
+  textSize(upperscreentextsize);
+  text("Draw Mode 4: Show All DataPoints: Nostalgia", 12, 60);
 
   textFont(bold);
   fill(colorNostalgia);
@@ -1274,19 +767,21 @@ void DrawNostalgiaIDs() {
 }
 
 
-
-
-void DrawWishbox() {
+//when the state is set to show the IDs, the draw method will call this routine to run
+void DrawNostalgiaSelects() {
   image(img, 0, 0);
 
   textFont(mono);
   fill(200, 200, 200);
-  textSize(20);
-  text("Draw Mode: Wishbox", 12, 44);
+  textSize(upperscreentextsize);
+  text("Draw Mode 4: Show Select DataPoints: Nostalgia", 12, secondtextlineheight);
 
-  fill(152, 0, 0);
+  textFont(bold);
+  fill(colorNostalgia);
   textSize(50);
-  text("Wishbox", 12, 100);
+  text("Nostalgia Selects", 12, 200);
+
+  //pick a random number of 5
 
   //for(int i = 0; i < datalog.length; i++){
   for (int i = 0; i < printtoscreencounter; i++) {
@@ -1296,21 +791,88 @@ void DrawWishbox() {
         temp[0] = float(datalog[i].Lat);
         if (datalog[i].Lon != null) {
           temp[1] = float(datalog[i].Lon);
-          if (datalog[i].qindex == 4000) {
-            DrawMapPoint(temp, 10, 255, 255, 255, datalog[i].answer);
+          if (datalog[i].qindex == 1004) {
+            //DrawMapPoint(temp, 10, colorNostalgia, "Unique User ID #"+datalog[i].id);
+            String text = datalog[(i+1)].answer;
+            DrawMapPoint(temp, 10, colorNostalgia, "Unique User ID #"+text);
           } else {
           }
         }
       }
     } 
     catch (NullPointerException e) {
-      println("exception called during ID drawing routine");
+      //println("exception called during ID drawing routine");
     }
   } 
   printtoscreencounter++;
   if (printtoscreencounter > datalog.length) {
     printtoscreencounter = datalog.length;
   }
+}
+
+void DrawWishbox() {
+  image(img, 0, 0);
+
+  textFont(mono);
+  fill(200, 200, 200);
+  textSize(upperscreentextsize);
+  text("Draw Mode: Wishbox", 12, secondtextlineheight);
+
+  fill(152, 0, 0);
+  textSize(50);
+  text("Wishbox", 12, 200);
+
+  int wishboxselector = int(random(wishboxcount));
+
+  WishboxFeature wish = wishlog[wishboxselector];
+  float[] temp = new float[2];
+  temp[0] = wish.lat;
+  temp[1] = wish.lon;
+
+  try {
+    DrawMapPoint(temp, 10, 255, 255, 255, wish.name);
+    textSize(100);
+    text(wish.name, 12, 300);
+  } 
+  catch (NullPointerException e) {
+    println("exception called during Wishbox drawing routine");
+  }
+
+  delay(1200);
+}
+
+void ReportLostBuilding() {
+  image(img, 0, 0);
+
+  textFont(mono);
+  fill(200, 200, 200);
+  textSize(upperscreentextsize);
+  text("Draw Mode: Reporting Nostalgia: LostBuildings", 12, secondtextlineheight);
+  textSize(30);
+
+  
+  textFont(bold);
+  fill(colorNostalgia);
+  textSize(20);
+  //text("Nostalgia Selects", 12, 200);
+    String[] lines = loadStrings("list.txt");
+  for (int i = 0 ; i < lines.length; i++) {
+    text(lines[i], 12, 100 + (30 * i));
+  }
+  
+}
+
+void DrawLostBuilding() {
+  image(img, 0, 0);
+
+  textFont(mono);
+  fill(200, 200, 200);
+  textSize(upperscreentextsize);
+  text("Draw Mode: LostBuilding", 12,secondtextlineheight);
+
+  String[] searchterms = new String[2];
+  SearchLostBuilding(searchterms);
+  text(searchterms.length, 12, 100);
 }
 
 
@@ -1320,8 +882,8 @@ void DrawCCIDs() {
   fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
-  textSize(20);
-  text("Draw Mode 4: Show All DataPoints, CityCenter", 12, 44);
+  textSize(upperscreentextsize);
+  text("Draw Mode 4: Show All DataPoints, CityCenter", 12, secondtextlineheight);
 
   textFont(bold);
   textSize(50);
@@ -1416,8 +978,8 @@ void PlaceImageFeatureName(int a) {
   fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
-  textSize(10);
-  text("Draw Mode: Place Image based on Feature Name", 12, 24);
+  textSize(upperscreentextsize);
+  text("Draw Mode: Place Image based on Feature Name", 12, secondtextlineheight);
 
   println("PlaceImageFeatureName called");
   textFont(mono);
@@ -1450,8 +1012,8 @@ void PlaceCCImageFeatureName(int a) {
   fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
-  textSize(10);
-  text("Draw Mode: Place Image based on Feature Name", 12, 24);
+  textSize(upperscreentextsize);
+  text("Draw Mode: Place Image based on Feature Name", 12, secondtextlineheight);
   textFont(mono);
   for (int i = 0; i < (features.length - 1); i++) {
     try {
@@ -1481,9 +1043,9 @@ void GridData() {
   stroke(200, 200, 200);
   strokeWeight(1);
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Draw Mode: User Session Grid Data", 12, 44);
+  text("Draw Mode: User Session Grid Data", 12, firsttextlineheight);
 
   textSize(30);
   fill(120, 120, 120);
@@ -1493,7 +1055,7 @@ void GridData() {
   int h = datalog.length;
   int count = 0;
   //number of entries before line break
-  int linebreak = 10;
+  int linebreak = 20;
 
   for (int i = 0; i < (h/linebreak); i++) {
     for (int y = 0; y < linebreak; y++) {
@@ -1541,12 +1103,12 @@ void GridData() {
       }
 
       strokeWeight(.1);
-      rect(((screenwidth/(h/linebreak))*i), ((screenheight/4)+(y*60)), ((screenwidth/(h/linebreak))-10), 20);
+      rect(((screenwidth/(h/linebreak))*i), ((screenheight/4)+(y*60)), ((screenwidth/(h/linebreak))-5), 20);
       //write the node id number underneath the rectangle
       textSize(10);
       fill(222, 222, 222);
       //rotate(PI/2);
-      text(count, ((screenwidth/(h/linebreak))*i), (((screenheight/4)+(y*60))-5));
+      text(count, ((screenwidth/(h/linebreak))*i), (((screenheight/4)+(y*60))-3));
       count++;
     }
   }
@@ -1559,7 +1121,7 @@ void MapAllNodes() {
   stroke(200, 200, 200);
   strokeWeight(1);
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
   text("Draw Mode: Map All Nodes", 12, 44);
 
@@ -1598,7 +1160,7 @@ void DrawAIdata(int a) {
   image(img, 0, 0);
 
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
   text("Draw Mode 7: Show AI Data", 12, 44);
   textFont(mono);
@@ -1623,9 +1185,9 @@ void PrintToScreen(String s, int x, int y) {
   strokeWeight(1);
 
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Print Text To Screen", 12, 44);
+  text("Print Text To Screen", 12, 50);
 
   textFont(bold);
 
@@ -1644,9 +1206,9 @@ void PrintToScreenLoop(String s, int x, int y) {
   strokeWeight(1);
 
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Print Text To Screen", 12, 44);
+  text("Print Text To Screen", 12, 50);
 
   textFont(bold);
 
@@ -1709,7 +1271,7 @@ int DrawAIitinerary(int a) {
   textFont(mono);
   textSize(20);
   fill(240, 240, 240);
-  text("Draw Mode 5: Show All DataPoints", 12, 44);
+  text("Draw Mode 5: Show All DataPoints", 12, 50);
 
   textSize(30);
   fill(120, 120, 120);
@@ -1766,9 +1328,9 @@ int DrawAIitinerary(int a) {
 void DatabaseViz() {
   image(img, 0, 0);
 
-  textSize(10);
+  textSize(upperscreentextsize);
   fill(200, 200, 200);
-  text("Draw Mode 2: Database Viz", 12, 24);
+  text("Draw Mode 2: Database Viz", 12, 50);
   //Itinerary temp = new Itinerary;
   //temp = itineraries.[random(itinerariescount];
   //DrawItinerary(temp, 2, 200);
@@ -1893,129 +1455,5 @@ void searchCCforgoogleimages(float x, float y, String s) {
 
       PlaceCCImage(loc, webImg, s);
     }
-  }
-}
-
-//Object to store each user session. These can be loaded into some container and then queried offline in case database connection is lost.
-class UserSession
-{
-  public int id;
-  public int qindex;
-  public int datetime;
-  public String question;
-  public String Category;
-  public String Type;
-  public String FeatureType;
-  public String FeatureName;
-  public String Lat;
-  public String Lon;
-  public String answer;
-
-  //id, question, answer, lat, long
-  UserSession(int a, String b, String c, String d, String e) {
-    id = a;
-    question = b;
-    answer = c;
-    Lat = d;
-    Lon = e;
-  }
-
-  UserSession(int a, int b, int c, String d, String e, String f, String g, String h, String i, String j, String k) {
-    id = a;
-    qindex = b;
-    datetime = c;
-    question = d;
-    Category = e;
-    Type = f;
-    FeatureType = g;
-    FeatureName = h;
-    Lat = i;
-    Lon = j;
-    answer = k;
-    //println("UserSession Constructor Called. ID # = "+id);
-  }
-
-
-
-  public String toString ()
-  {
-    //return String.format("id: %i, question: %s answer: %s", id, question, answer);
-    String r = "id: " + str(id) + ", question: " + question + " answer: " + answer;
-    return r;
-  }
-}
-
-
-
-//Object to store each user session. These can be loaded into some container and then queried offline in case database connection is lost.
-class AISession
-{
-  public int id;
-  public Float lat1;
-  public Float lon1;
-  public Float lat2;
-  public Float lon2;
-  public Float lat3;
-  public Float lon3;
-  public Float lat4;
-  public Float lon4;
-
-
-  AISession(int a, float b, float c, float d, float e, float f, float g, float h, float i) {
-    id = a;
-    lat1 = b;
-    lon1 = c;
-    lat2 = d;
-    lon2 = e;
-    lat3 = f;
-    lon3 = g;
-    lat4 = h;
-    lon4 = i;
-  }
-}
-
-//Object to store an itinerary
-class Itinerary
-{
-  public float[] point1;
-  public float[] point2;
-  public float[] point3;
-  public float[] point4;
-  public int id;
-
-  Itinerary(float[] a, float[] b, float[] c, float[] d, int e) {
-    point1 = a;
-    point2 = b;
-    point3 = c;
-    point4 = d;
-    id = e;
-  }
-
-  public String toString ()
-  {
-    //return String.format("id: %i, question: %s answer: %s", id, question, answer);
-    String r = "point1 lat: " + str(point1[0]) + " " + "point1 lon: " + str(point1[1]);
-    return r;
-  }
-}
-
-//Object to store an itinerary
-class Feature
-{
-  public float lat;
-  public float lon;
-  public String name;
-
-  Feature(String featureName, Float featureLat, Float featureLon) {
-    name = featureName;
-    lat = featureLat;
-    lon = featureLon;
-  }
-
-  public String toString ()
-  {
-    //return String.format("id: %i, question: %s answer: %s", id, question, answer);
-    String r = "name " + name + " " + "lat " + lat+ " " + "lon " + lon;
-    return r;
   }
 }
