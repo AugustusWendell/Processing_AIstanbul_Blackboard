@@ -217,6 +217,7 @@ void FindMarkovData(int qid1, int qid2) {
 }
 
 void FindHome(){
+    float[] temp = new float[2];
   //initialize the final single JSON to hold all data  
   JSONObject json = new JSONObject();
           
@@ -234,12 +235,11 @@ void FindHome(){
 
         json.setFloat("lat", temp[0]);
         json.setFloat("lon", temp[1]);
-        json.setString("name", buildingname);
+        //json.setString("name", buildingname);
 
-        saveJSONObject(json, "data/AIstanbul_LostBuilding_"+r+".json");
+        //saveJSONObject(json, "data/AIstanbul_LostBuilding_"+r+".json");
 
   }
-}
 
 void ImportWishBox() {
 

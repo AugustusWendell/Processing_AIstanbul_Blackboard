@@ -64,7 +64,7 @@ States state = States.STATE_1;
 
 int time;
 //time between state changes
-int wait = 20000;
+int wait = 22000;
 
 //map image holder
 PImage img;
@@ -100,8 +100,8 @@ float CCbottomedge = 40.95231;
 float CCtopedge = 41.06623;
 
 void setup() {
-  //fullScreen();
-  size(1920, 1080);
+  fullScreen();
+  //size(1920, 1080);
   background(0);
   noStroke();
   fill(102);
@@ -179,7 +179,8 @@ void draw() {
     PlaceImageFeatureName(3);
     break;
   case STATE_11:
-    ReportLostBuilding();
+    ReportLostBuildingCC();
+    //ReportLostBuilding();
     //DatabaseViz();
     break;
   case STATE_12:
@@ -221,8 +222,8 @@ void draw() {
   textFont(mono);
   textSize(upperscreentextsize);
   fill(188, 188, 188);
-  text("[AI]stanbul Blackboard Application 1.00      "+state+"          " +m+ "_" +d+ "  "+h+"hours "+min+"minutes "+s+"seconds", 12, 25);
-  text("Draw timing: " + millis() + " milliseconds", 1400, 25);
+  text("[AI]stanbul Blackboard Application 1.00      "+state+"          " +m+ "_" +d+ "  "+h+"hours "+min+"minutes "+s+"seconds", 12, 26);
+  text("Draw timing: " + millis() + " milliseconds", 1400, 26);
 
   //check the difference between now and the previously stored time is greater than the wait interval
   if (millis() - time >= wait) {
@@ -312,7 +313,7 @@ void AI_Text_Itinerary() {
   textFont(mono);
   textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Draw Mode: Report AI itinerary", 12, 500);
+  text("Draw Mode: Report AI itinerary", 12, firsttextlineheight);
 }
 
 void ScreenInitialize() {
@@ -334,8 +335,8 @@ void DrawItineraries() {
   textFont(mono);
   textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Güzergahlar Çiziliyor", 12, firsttextlineheight);
-  text("Draw Mode: User Itineraries", 12, secondtextlineheight);
+  text("Güzergahlar Çiziliyor", 12, secondtextlineheight);
+  text("Draw Mode: User Itineraries", 12, firsttextlineheight);
   color c;
   c = color(255, 255, 255);
 
@@ -373,8 +374,8 @@ void DrawLastUserData() {
   textFont(mono);
   textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text(" ", 12, firsttextlineheight);
-  text("Draw Mode: Last User Input", 12, secondtextlineheight);
+  text(" ", 12, secondtextlineheight);
+  text("Draw Mode: Last User Input", 12, firsttextlineheight);
 
   //document the last user interaction
   int userid = GetUserId(usersessioncount);
@@ -412,7 +413,7 @@ void  DrawLastUserDataItinerary() {
   textSize(upperscreentextsize);
   fill(240, 240, 240);
   //text("Güzergahlar Çiziliyor", 12, firsttextlineheight);
-  text("Draw Mode: Last Complete User Itinerary", 12, secondtextlineheight);
+  text("Draw Mode: Last Complete User Itinerary", 12, firsttextlineheight);
   color c;
   c = color(255, 0, 0);
 
@@ -432,8 +433,8 @@ void DrawAIItineraries() {
   textFont(mono);
   textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Güzergahlar Çiziliyor", 12, firsttextlineheight);
-  text("Draw Mode: Artificial Intelligence Itineraries", 12, secondtextlineheight);
+  text("Güzergahlar Çiziliyor", 12, secondtextlineheight);
+  text("Draw Mode: Artificial Intelligence Itineraries", 12, firsttextlineheight);
 
   for (int i = 0; i < printtoscreencounter; i++) {
     //for(int i = 0; i < itineraries.length; i++){
@@ -456,7 +457,7 @@ void DrawCCItineraries() {
   textFont(mono);
   textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Draw Mode: User Itineraries, City Center", 12, secondtextlineheight);
+  text("Draw Mode: User Itineraries, City Center", 12, firsttextlineheight);
 
   for (int i = 0; i < printtoscreencounter; i++) {
     //for(int i = 0; i < itineraries.length; i++){
@@ -486,7 +487,7 @@ void DrawAICCItineraries() {
   textFont(mono);
   textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Draw Mode: Artificial Intelligence Itineraries, City Center", 12, secondtextlineheight);
+  text("Draw Mode: Artificial Intelligence Itineraries, City Center", 12, firsttextlineheight);
 
   for (int i = 0; i < printtoscreencounter; i++) {
     //for(int i = 0; i < itineraries.length; i++){
@@ -546,7 +547,7 @@ void WriteItinerary() {
   textFont(mono);
   textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Draw Mode 1: Itinerary", 12, 50);
+  text("Draw Mode 1: Itinerary", 12, firsttextlineheight);
 
 
   //create new query to get data from the database to populate the mad lib itinerary
@@ -619,7 +620,7 @@ void  ListRecentDataPoints() {
   textFont(mono);
   textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Draw Mode: List Recent Data", 12, 60);
+  text("Draw Mode: List Recent Data", 12, firsttextlineheight);
   fill(200, 200, 200);
 
   /*
@@ -627,7 +628,7 @@ void  ListRecentDataPoints() {
    for (int i = 1; i < featurecount; i++) {
    try {
    //text("Feature Input Found. Feature Name: "+features[i].name, 200, (70 + (17 * i)));
-   text("Feature Input Found. Feature Name: "+features[(featurecount - i)].name, 200, (70 + (17 * i)));
+   text("Feature Input Found. Feature Name: "+features[(featurecount - i)].name, 200, (70 + (20 * i)));
    } 
    catch (NullPointerException f) {
    }
@@ -639,7 +640,7 @@ void  ListRecentDataPoints() {
     fill(200, 200, 200);
     for (int i = 0; i < printtoscreencounter; i++) {
       try {
-        text("Feature Input Found. Feature Name: "+features[(featurecount - i)].name, 200, (100 + (20 * i)));
+        text("Feature Input Found. Feature Name: "+features[(featurecount - i)].name, 200, (100 + (25 * i)));
       } 
       catch (NullPointerException e) {
       }
@@ -668,12 +669,12 @@ void  ListFeatures() {
 //when the state is set to show the IDs, the draw method will call this routine to run
 void DrawIDs() {
   image(img, 0, 0);
-  fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
-  textSize(upperscreentextsize);
   textFont(mono);
-  text("Draw Mode 4: Show All DataPoints", 12, 60);
+  textSize(upperscreentextsize);
+  fill(240, 240, 240);
+  text("Draw Mode 4: Show All DataPoints", 12, firsttextlineheight);
 
 
   textFont(bold);
@@ -731,10 +732,12 @@ void DrawIDs() {
 void DrawNostalgiaIDs() {
   image(img, 0, 0);
 
+  stroke(200, 200, 200);
+  strokeWeight(1);
   textFont(mono);
-  fill(200, 200, 200);
   textSize(upperscreentextsize);
-  text("Draw Mode 4: Show All DataPoints: Nostalgia", 12, 60);
+  fill(240, 240, 240);
+  text("Draw Mode 4: Show All DataPoints: Nostalgia", 12, firsttextlineheight);
 
   textFont(bold);
   fill(colorNostalgia);
@@ -771,10 +774,12 @@ void DrawNostalgiaIDs() {
 void DrawNostalgiaSelects() {
   image(img, 0, 0);
 
+  stroke(200, 200, 200);
+  strokeWeight(1);
   textFont(mono);
-  fill(200, 200, 200);
   textSize(upperscreentextsize);
-  text("Draw Mode 4: Show Select DataPoints: Nostalgia", 12, secondtextlineheight);
+  fill(240, 240, 240);
+  text("Draw Mode 4: Show Select DataPoints: Nostalgia", 12, firsttextlineheight);
 
   textFont(bold);
   fill(colorNostalgia);
@@ -813,10 +818,12 @@ void DrawNostalgiaSelects() {
 void DrawWishbox() {
   image(img, 0, 0);
 
+  stroke(200, 200, 200);
+  strokeWeight(1);
   textFont(mono);
-  fill(200, 200, 200);
   textSize(upperscreentextsize);
-  text("Draw Mode: Wishbox", 12, secondtextlineheight);
+  fill(240, 240, 240);
+  text("Draw Mode: Wishbox", 12, firsttextlineheight);
 
   fill(152, 0, 0);
   textSize(50);
@@ -844,10 +851,12 @@ void DrawWishbox() {
 void ReportLostBuilding() {
   image(img, 0, 0);
 
+  stroke(200, 200, 200);
+  strokeWeight(1);
   textFont(mono);
-  fill(200, 200, 200);
   textSize(upperscreentextsize);
-  text("Draw Mode: Reporting Nostalgia: LostBuildings", 12, secondtextlineheight);
+  fill(240, 240, 240);
+  text("Draw Mode: Reporting Nostalgia: LostBuildings", 12, firsttextlineheight);
   textSize(30);
 
   
@@ -857,18 +866,138 @@ void ReportLostBuilding() {
   //text("Nostalgia Selects", 12, 200);
     String[] lines = loadStrings("list.txt");
   for (int i = 0 ; i < lines.length; i++) {
-    text(lines[i], 12, 100 + (30 * i));
+    text(lines[i], 12, 200 + (15 * i));
   }
   
+  //load images
+
+  float[] coordinates = new float[2];
+
+  PImage AKMimage;
+  AKMimage = loadImage("AKM.jpeg");
+    AKMimage.resize(0, 50);
+  coordinates[0] = 41.036594;
+  coordinates[1] = 28.987806;
+  PlaceImage(coordinates, AKMimage, "AKM");
+  
+  PImage HAYDARimage;
+  HAYDARimage = loadImage("HAYDAR.jpg");
+    HAYDARimage.resize(0, 50);
+  coordinates[0] = 40.996772;
+  coordinates[1] = 29.019191;
+  PlaceImage(coordinates, HAYDARimage, "HAYDAR");
+  
+  PImage STADIUMimage;
+  STADIUMimage = loadImage("STADIUM.jpg");
+  STADIUMimage.resize(0, 50);
+  coordinates[0] = 41.036594;
+  coordinates[1] = 28.987806;
+  PlaceImage(coordinates, STADIUMimage, "STADIUM");
+  
+  PImage TAKSIMimage;
+  TAKSIMimage = loadImage("TAKSIM.jpg");
+    TAKSIMimage.resize(0, 50);
+  coordinates[0] = 41.035683;
+  coordinates[1] = 28.981194;
+  PlaceImage(coordinates, TAKSIMimage, "TAKSIM");
+  
+    PImage CINEMAimage;
+  CINEMAimage = loadImage("CINEMA.jpg");
+    CINEMAimage.resize(0, 50);
+  coordinates[0] = 41.034973;
+  coordinates[1] = 28.979594;
+  PlaceImage(coordinates, CINEMAimage, "CINEMA");
+  
+      PImage HAGIASOFIAimage;
+  HAGIASOFIAimage = loadImage("HAGIASOFIA.jpg");
+    HAGIASOFIAimage.resize(0, 50);
+  coordinates[0] = 41.008425;
+  coordinates[1] = 28.980368;
+  PlaceImage(coordinates, HAGIASOFIAimage, "HAGIA SOFIA");
+
+
+
+
+
+}
+
+void ReportLostBuildingCC() {
+  image(imgCC, 0, 0);
+
+  stroke(200, 200, 200);
+  strokeWeight(1);
+  textFont(mono);
+  textSize(upperscreentextsize);
+  fill(240, 240, 240);
+  text("Draw Mode: Reporting Nostalgia: LostBuildings City Center", 12, firsttextlineheight);
+  textSize(30);
+
+  
+  textFont(bold);
+  fill(colorNostalgia);
+  textSize(20);
+  //text("Nostalgia Selects", 12, 200);
+    String[] lines = loadStrings("list.txt");
+  for (int i = 0 ; i < lines.length; i++) {
+    text(lines[i], 12, 200 + (15 * i));
+  }
+  
+  //load images
+
+  float[] coordinates = new float[2];
+
+  PImage AKMimage;
+  AKMimage = loadImage("AKM.jpeg");
+    AKMimage.resize(0, 50);
+  coordinates[0] = 41.036594;
+  coordinates[1] = 28.987806;
+  PlaceCCImage(coordinates, AKMimage, "AKM");
+  
+  PImage HAYDARimage;
+  HAYDARimage = loadImage("HAYDAR.jpg");
+    HAYDARimage.resize(0, 50);
+  coordinates[0] = 40.996772;
+  coordinates[1] = 29.019191;
+  PlaceCCImage(coordinates, HAYDARimage, "HAYDAR");
+  
+  PImage STADIUMimage;
+  STADIUMimage = loadImage("STADIUM.jpg");
+  STADIUMimage.resize(0, 50);
+  coordinates[0] = 41.036594;
+  coordinates[1] = 28.987806;
+  PlaceCCImage(coordinates, STADIUMimage, "STADIUM");
+  
+  PImage TAKSIMimage;
+  TAKSIMimage = loadImage("TAKSIM.jpg");
+    TAKSIMimage.resize(0, 50);
+  coordinates[0] = 41.035683;
+  coordinates[1] = 28.981194;
+  PlaceCCImage(coordinates, TAKSIMimage, "TAKSIM");
+  
+    PImage CINEMAimage;
+  CINEMAimage = loadImage("CINEMA.jpg");
+    CINEMAimage.resize(0, 50);
+  coordinates[0] = 41.034973;
+  coordinates[1] = 28.979594;
+  PlaceCCImage(coordinates, CINEMAimage, "CINEMA");
+  
+      PImage HAGIASOFIAimage;
+  HAGIASOFIAimage = loadImage("HAGIASOFIA.jpg");
+    HAGIASOFIAimage.resize(0, 50);
+  coordinates[0] = 41.008425;
+  coordinates[1] = 28.980368;
+  PlaceCCImage(coordinates, HAGIASOFIAimage, "HAGIA SOFIA");
 }
 
 void DrawLostBuilding() {
   image(img, 0, 0);
 
+  stroke(200, 200, 200);
+  strokeWeight(1);
   textFont(mono);
-  fill(200, 200, 200);
   textSize(upperscreentextsize);
-  text("Draw Mode: LostBuilding", 12,secondtextlineheight);
+  fill(240, 240, 240);
+  text("Draw Mode: LostBuilding", 12,firsttextlineheight);
 
   String[] searchterms = new String[2];
   SearchLostBuilding(searchterms);
@@ -879,11 +1008,12 @@ void DrawLostBuilding() {
 //when the state is set to show the IDs, the draw method will call this routine to run
 void DrawCCIDs() {
   image(imgCC, 0, 0);
-  fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
+  textFont(mono);
   textSize(upperscreentextsize);
-  text("Draw Mode 4: Show All DataPoints, CityCenter", 12, secondtextlineheight);
+  fill(240, 240, 240);
+  text("Draw Mode 4: Show All DataPoints, CityCenter", 12, firsttextlineheight);
 
   textFont(bold);
   textSize(50);
@@ -975,11 +1105,12 @@ void PrintFeaturesDebug() {
 //when the state is set to show the IDs, the draw method will call this routine to run
 void PlaceImageFeatureName(int a) {
   image(img, 0, 0);
-  fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
+  textFont(mono);
   textSize(upperscreentextsize);
-  text("Draw Mode: Place Image based on Feature Name", 12, secondtextlineheight);
+  fill(240, 240, 240); //<>//
+  text("Draw Mode: Place Image based on Feature Name", 12, firsttextlineheight);
 
   println("PlaceImageFeatureName called");
   textFont(mono);
@@ -1009,11 +1140,12 @@ void PlaceImageFeatureName(int a) {
 //when the state is set to show the IDs, the draw method will call this routine to run
 void PlaceCCImageFeatureName(int a) {
   image(imgCC, 0, 0);
-  fill(200, 200, 200);
   stroke(200, 200, 200);
   strokeWeight(1);
+  textFont(mono);
   textSize(upperscreentextsize);
-  text("Draw Mode: Place Image based on Feature Name", 12, secondtextlineheight);
+  fill(240, 240, 240);
+  text("Draw Mode: Place Image based on Feature Name", 12, firsttextlineheight);
   textFont(mono);
   for (int i = 0; i < (features.length - 1); i++) {
     try {
@@ -1055,7 +1187,7 @@ void GridData() {
   int h = datalog.length;
   int count = 0;
   //number of entries before line break
-  int linebreak = 20;
+  int linebreak = 30;
 
   for (int i = 0; i < (h/linebreak); i++) {
     for (int y = 0; y < linebreak; y++) {
@@ -1103,12 +1235,12 @@ void GridData() {
       }
 
       strokeWeight(.1);
-      rect(((screenwidth/(h/linebreak))*i), ((screenheight/4)+(y*60)), ((screenwidth/(h/linebreak))-5), 20);
+      rect(((screenwidth/(h/linebreak))*i), ((screenheight/15)+(y*60)), ((screenwidth/(h/linebreak))-5), 20);
       //write the node id number underneath the rectangle
       textSize(10);
       fill(222, 222, 222);
       //rotate(PI/2);
-      text(count, ((screenwidth/(h/linebreak))*i), (((screenheight/4)+(y*60))-3));
+      text(count, ((screenwidth/(h/linebreak))*i), (((screenheight/15)+(y*60))-3));
       count++;
     }
   }
@@ -1123,7 +1255,7 @@ void MapAllNodes() {
   textFont(mono);
   textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Draw Mode: Map All Nodes", 12, 44);
+  text("Draw Mode: Map All Nodes", 12, firsttextlineheight);
 
   textSize(30);
   fill(120, 120, 120);
@@ -1159,10 +1291,12 @@ void MapAllNodes() {
 void DrawAIdata(int a) {
   image(img, 0, 0);
 
+  stroke(200, 200, 200);
+  strokeWeight(1);
   textFont(mono);
   textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Draw Mode 7: Show AI Data", 12, 44);
+  text("Draw Mode 7: Show AI Data", 12, firsttextlineheight);
   textFont(mono);
   if (printtoscreencounter < datalog.length) {
     fill(200, 200, 200);
@@ -1187,7 +1321,7 @@ void PrintToScreen(String s, int x, int y) {
   textFont(mono);
   textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Print Text To Screen", 12, 50);
+  text("Print Text To Screen", 12, firsttextlineheight);
 
   textFont(bold);
 
@@ -1208,7 +1342,7 @@ void PrintToScreenLoop(String s, int x, int y) {
   textFont(mono);
   textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Print Text To Screen", 12, 50);
+  text("Print Text To Screen", 12, firsttextlineheight);
 
   textFont(bold);
 
@@ -1268,10 +1402,12 @@ int DrawAIitinerary(int a) {
 
 
 
+  stroke(200, 200, 200);
+  strokeWeight(1);
   textFont(mono);
-  textSize(20);
+  textSize(upperscreentextsize);
   fill(240, 240, 240);
-  text("Draw Mode 5: Show All DataPoints", 12, 50);
+  text("Draw Mode 5: Show All DataPoints", 12, firsttextlineheight);
 
   textSize(30);
   fill(120, 120, 120);
@@ -1328,9 +1464,12 @@ int DrawAIitinerary(int a) {
 void DatabaseViz() {
   image(img, 0, 0);
 
+  stroke(200, 200, 200);
+  strokeWeight(1);
+  textFont(mono);
   textSize(upperscreentextsize);
-  fill(200, 200, 200);
-  text("Draw Mode 2: Database Viz", 12, 50);
+  fill(240, 240, 240);
+  text("Draw Mode 2: Database Viz", 12, firsttextlineheight);
   //Itinerary temp = new Itinerary;
   //temp = itineraries.[random(itinerariescount];
   //DrawItinerary(temp, 2, 200);
